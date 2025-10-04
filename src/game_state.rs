@@ -4,7 +4,7 @@ use macroquad::{
     math::{f32, IVec2, Rect},
     shapes::draw_rectangle,
     texture::{load_texture, Texture2D},
-    window::clear_background,
+    window::{clear_background, screen_width, screen_height},
 };
 
 use crate::constants::*;
@@ -108,27 +108,24 @@ impl GameState {
     }
 
     fn get_camera() -> Camera2D {
-        let camera_rect = Rect {
-            x: 0.0,
-            y: 0.0,
-            w: SCREEN_W,
-            h: SCREEN_H,
-        };
+        // Calculate integer zoom factor for pixel perfect rendering
+        let zoom = ((screen_width() as i32 / SCREEN_W as i32)
+            .min(screen_height() as i32 / SCREEN_H as i32)) as i32;
 
-        let camera_target = f32::vec2(
-            camera_rect.x + camera_rect.w / 2.,
-            camera_rect.y + camera_rect.h / 2.,
-        );
-        let camera_zoom = f32::vec2(1. / camera_rect.w * 2., 1. / camera_rect.h * 2.);
+        let zoomed_w = (SCREEN_W as i32) * zoom;
+        let zoomed_h = (SCREEN_H as i32) * zoom;
+
+        // Center viewport on screen
+        let x_offset = (screen_width() as i32 - zoomed_w) / 2;
+        let y_offset = (screen_height() as i32 - zoomed_h) / 2;
 
         let camera = Camera2D {
-            target: camera_target,
-            zoom: camera_zoom,
+            target: f32::vec2(SCREEN_W / 2.0, SCREEN_H / 2.0),
+            zoom: f32::vec2(2.0 / SCREEN_W, -2.0 / SCREEN_H),
             offset: f32::Vec2::ZERO,
-            rotation: 0.,
-
+            rotation: 0.0,
             render_target: None,
-            viewport: None,
+            viewport: Some((x_offset, y_offset, zoomed_w, zoomed_h)),
         };
 
         set_camera(&camera);
