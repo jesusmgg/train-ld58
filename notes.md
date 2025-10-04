@@ -1,5 +1,4 @@
 ## Pending
-- In-level grid.
 - Track layout.
 - Track layout UI.
 - Train.
