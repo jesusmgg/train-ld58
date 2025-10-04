@@ -7,6 +7,7 @@ use constants::*;
 use game_state::{GameState, TileType, TrainDirection};
 use macroquad::{
     audio::{play_sound, play_sound_once, stop_sound, PlaySoundParams},
+    math::Rect,
     prelude::*,
 };
 use text::draw_scaled_text;
@@ -36,9 +37,12 @@ async fn main() {
         render_background(&game_state);
         render_grid(&game_state);
         render_placed_tiles(&game_state);
+        render_tunnel_layer_2(&game_state);
+        render_tunnel_layer_3(&game_state);
         render_tile_highlight(&game_state);
         render_selected_tile_preview(&game_state);
         render_train(&game_state);
+        render_tunnel_frames(&game_state);
 
         // UI
         set_default_camera();
@@ -90,19 +94,19 @@ fn update_current_level(game_state: &mut GameState) {
         // Update train position to new level's default start
         game_state.train_tile_pos = new_level.default_train_start;
 
-        // Update train direction based on entry point
+        // Update train direction based on tunnel position
         let w = new_level.grid_tiles.x;
         let h = new_level.grid_tiles.y;
         let start = new_level.default_train_start;
 
-        game_state.train_direction = if start.x == w - 1 {
-            TrainDirection::Left // At right edge, facing left
-        } else if start.x == 0 {
-            TrainDirection::Right // At left edge, facing right
-        } else if start.y == 0 {
-            TrainDirection::Down // At top edge, facing down
-        } else if start.y == h - 1 {
-            TrainDirection::Up // At bottom edge, facing up
+        game_state.train_direction = if start.x == -1 {
+            TrainDirection::Right // Left tunnel, entering right
+        } else if start.x == w {
+            TrainDirection::Left // Right tunnel, entering left
+        } else if start.y == -1 {
+            TrainDirection::Down // Top tunnel, entering down
+        } else if start.y == h {
+            TrainDirection::Up // Bottom tunnel, entering up
         } else {
             TrainDirection::Right // Default
         };
@@ -418,36 +422,324 @@ fn render_placed_tiles(game_state: &GameState) {
                     let grid_offset = level.grid_offset();
                     let grid_origin = level.pos_world + grid_offset;
 
-                    // Draw all placed tiles in this level
+                    // Draw all placed tiles in this level (skip tunnels, they're rendered separately)
+                    for (tile_pos, tile_type) in &level.tile_layout {
+                        // Skip tunnel tiles - they will be rendered in layers
+                        if matches!(
+                            tile_type,
+                            TileType::TunnelUpOpen
+                                | TileType::TunnelUpClosed
+                                | TileType::TunnelDownOpen
+                                | TileType::TunnelDownClosed
+                                | TileType::TunnelLeftOpen
+                                | TileType::TunnelLeftClosed
+                                | TileType::TunnelRightOpen
+                                | TileType::TunnelRightClosed
+                        ) {
+                            continue;
+                        }
+
+                        let x = grid_origin.x + (tile_pos.x as f32 * TILE_SIZE_X);
+                        let y = grid_origin.y + (tile_pos.y as f32 * TILE_SIZE_Y);
+
+                        let texture = game_state.get_texture_for_tile(*tile_type);
+                        draw_texture(texture, x, y, WHITE);
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Render tunnel layer 2: holes for open tunnels, half-tracks for closed tunnels
+fn render_tunnel_layer_2(game_state: &GameState) {
+    if let Some(active_idx) = game_state.level_active {
+        let grid_x = active_idx % 3;
+        let grid_y = active_idx / 3;
+
+        for dy in -1..=1 {
+            for dx in -1..=1 {
+                let nx = grid_x as i32 + dx;
+                let ny = grid_y as i32 + dy;
+
+                if nx >= 0 && nx < 3 && ny >= 0 && ny < 3 {
+                    let neighbor_idx = (ny * 3 + nx) as usize;
+                    let level = &game_state.levels[neighbor_idx];
+
+                    let grid_offset = level.grid_offset();
+                    let grid_origin = level.pos_world + grid_offset;
+
                     for (tile_pos, tile_type) in &level.tile_layout {
                         let x = grid_origin.x + (tile_pos.x as f32 * TILE_SIZE_X);
                         let y = grid_origin.y + (tile_pos.y as f32 * TILE_SIZE_Y);
 
-                        // Draw background for tunnels (behind transparent door area)
                         match tile_type {
-                            TileType::TunnelUpOpen
-                            | TileType::TunnelDownOpen
-                            | TileType::TunnelLeftOpen
-                            | TileType::TunnelRightOpen => {
-                                draw_rectangle(x, y, TILE_SIZE_X, TILE_SIZE_Y, BLACK);
-                            }
-                            TileType::TunnelUpClosed
-                            | TileType::TunnelDownClosed
-                            | TileType::TunnelLeftClosed
-                            | TileType::TunnelRightClosed => {
-                                draw_rectangle(
+                            TileType::TunnelUpOpen => {
+                                draw_texture(
+                                    &game_state.texture_mountain_tunnel_hole_open_u,
                                     x,
                                     y,
-                                    TILE_SIZE_X,
-                                    TILE_SIZE_Y,
-                                    game_state.styles.colors.gray_2,
+                                    WHITE,
+                                );
+                            }
+                            TileType::TunnelDownOpen => {
+                                draw_texture(
+                                    &game_state.texture_mountain_tunnel_hole_open_d,
+                                    x,
+                                    y,
+                                    WHITE,
+                                );
+                            }
+                            TileType::TunnelLeftOpen => {
+                                draw_texture(
+                                    &game_state.texture_mountain_tunnel_hole_open_l,
+                                    x,
+                                    y,
+                                    WHITE,
+                                );
+                            }
+                            TileType::TunnelRightOpen => {
+                                draw_texture(
+                                    &game_state.texture_mountain_tunnel_hole_open_r,
+                                    x,
+                                    y,
+                                    WHITE,
+                                );
+                            }
+                            TileType::TunnelUpClosed => {
+                                // Show bottom half of vertical track (positioned at bottom of tile)
+                                draw_texture_ex(
+                                    &game_state.texture_track_v,
+                                    x,
+                                    y + TILE_SIZE_Y / 2.0,
+                                    WHITE,
+                                    DrawTextureParams {
+                                        source: Some(Rect::new(0.0, 16.0, 32.0, 16.0)),
+                                        dest_size: Some(Vec2::new(TILE_SIZE_X, TILE_SIZE_Y / 2.0)),
+                                        flip_y: true,
+                                        ..Default::default()
+                                    },
+                                );
+                            }
+                            TileType::TunnelDownClosed => {
+                                // Show top half of vertical track (positioned at top of tile)
+                                draw_texture_ex(
+                                    &game_state.texture_track_v,
+                                    x,
+                                    y,
+                                    WHITE,
+                                    DrawTextureParams {
+                                        source: Some(Rect::new(0.0, 0.0, 32.0, 16.0)),
+                                        dest_size: Some(Vec2::new(TILE_SIZE_X, TILE_SIZE_Y / 2.0)),
+                                        flip_y: true,
+                                        ..Default::default()
+                                    },
+                                );
+                            }
+                            TileType::TunnelLeftClosed => {
+                                // Show right half of horizontal track (positioned at right of tile)
+                                draw_texture_ex(
+                                    &game_state.texture_track_h,
+                                    x + TILE_SIZE_X / 2.0,
+                                    y,
+                                    WHITE,
+                                    DrawTextureParams {
+                                        source: Some(Rect::new(16.0, 0.0, 16.0, 32.0)),
+                                        dest_size: Some(Vec2::new(TILE_SIZE_X / 2.0, TILE_SIZE_Y)),
+                                        flip_y: true,
+                                        ..Default::default()
+                                    },
+                                );
+                            }
+                            TileType::TunnelRightClosed => {
+                                // Show left half of horizontal track (positioned at left of tile)
+                                draw_texture_ex(
+                                    &game_state.texture_track_h,
+                                    x,
+                                    y,
+                                    WHITE,
+                                    DrawTextureParams {
+                                        source: Some(Rect::new(0.0, 0.0, 16.0, 32.0)),
+                                        dest_size: Some(Vec2::new(TILE_SIZE_X / 2.0, TILE_SIZE_Y)),
+                                        flip_y: true,
+                                        ..Default::default()
+                                    },
                                 );
                             }
                             _ => {}
                         }
+                    }
+                }
+            }
+        }
+    }
+}
 
-                        let texture = game_state.get_texture_for_tile(*tile_type);
-                        draw_texture(texture, x, y, WHITE);
+/// Render tunnel layer 3: half-tracks for open tunnels, holes for closed tunnels
+fn render_tunnel_layer_3(game_state: &GameState) {
+    if let Some(active_idx) = game_state.level_active {
+        let grid_x = active_idx % 3;
+        let grid_y = active_idx / 3;
+
+        for dy in -1..=1 {
+            for dx in -1..=1 {
+                let nx = grid_x as i32 + dx;
+                let ny = grid_y as i32 + dy;
+
+                if nx >= 0 && nx < 3 && ny >= 0 && ny < 3 {
+                    let neighbor_idx = (ny * 3 + nx) as usize;
+                    let level = &game_state.levels[neighbor_idx];
+
+                    let grid_offset = level.grid_offset();
+                    let grid_origin = level.pos_world + grid_offset;
+
+                    for (tile_pos, tile_type) in &level.tile_layout {
+                        let x = grid_origin.x + (tile_pos.x as f32 * TILE_SIZE_X);
+                        let y = grid_origin.y + (tile_pos.y as f32 * TILE_SIZE_Y);
+
+                        match tile_type {
+                            TileType::TunnelUpOpen => {
+                                // Show bottom half of vertical track (positioned at bottom of tile)
+                                draw_texture_ex(
+                                    &game_state.texture_track_v,
+                                    x,
+                                    y + TILE_SIZE_Y / 2.0,
+                                    WHITE,
+                                    DrawTextureParams {
+                                        source: Some(Rect::new(0.0, 16.0, 32.0, 16.0)),
+                                        dest_size: Some(Vec2::new(TILE_SIZE_X, TILE_SIZE_Y / 2.0)),
+                                        flip_y: true,
+                                        ..Default::default()
+                                    },
+                                );
+                            }
+                            TileType::TunnelDownOpen => {
+                                // Show top half of vertical track (positioned at top of tile)
+                                draw_texture_ex(
+                                    &game_state.texture_track_v,
+                                    x,
+                                    y,
+                                    WHITE,
+                                    DrawTextureParams {
+                                        source: Some(Rect::new(0.0, 0.0, 32.0, 16.0)),
+                                        dest_size: Some(Vec2::new(TILE_SIZE_X, TILE_SIZE_Y / 2.0)),
+                                        flip_y: true,
+                                        ..Default::default()
+                                    },
+                                );
+                            }
+                            TileType::TunnelLeftOpen => {
+                                // Show right half of horizontal track (positioned at right of tile)
+                                draw_texture_ex(
+                                    &game_state.texture_track_h,
+                                    x + TILE_SIZE_X / 2.0,
+                                    y,
+                                    WHITE,
+                                    DrawTextureParams {
+                                        source: Some(Rect::new(16.0, 0.0, 16.0, 32.0)),
+                                        dest_size: Some(Vec2::new(TILE_SIZE_X / 2.0, TILE_SIZE_Y)),
+                                        flip_y: true,
+                                        ..Default::default()
+                                    },
+                                );
+                            }
+                            TileType::TunnelRightOpen => {
+                                // Show left half of horizontal track (positioned at left of tile)
+                                draw_texture_ex(
+                                    &game_state.texture_track_h,
+                                    x,
+                                    y,
+                                    WHITE,
+                                    DrawTextureParams {
+                                        source: Some(Rect::new(0.0, 0.0, 16.0, 32.0)),
+                                        dest_size: Some(Vec2::new(TILE_SIZE_X / 2.0, TILE_SIZE_Y)),
+                                        flip_y: true,
+                                        ..Default::default()
+                                    },
+                                );
+                            }
+                            TileType::TunnelUpClosed => {
+                                draw_texture(
+                                    &game_state.texture_mountain_tunnel_hole_closed_u,
+                                    x,
+                                    y,
+                                    WHITE,
+                                );
+                            }
+                            TileType::TunnelDownClosed => {
+                                draw_texture(
+                                    &game_state.texture_mountain_tunnel_hole_closed_d,
+                                    x,
+                                    y,
+                                    WHITE,
+                                );
+                            }
+                            TileType::TunnelLeftClosed => {
+                                draw_texture(
+                                    &game_state.texture_mountain_tunnel_hole_closed_l,
+                                    x,
+                                    y,
+                                    WHITE,
+                                );
+                            }
+                            TileType::TunnelRightClosed => {
+                                draw_texture(
+                                    &game_state.texture_mountain_tunnel_hole_closed_r,
+                                    x,
+                                    y,
+                                    WHITE,
+                                );
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Render tunnel layer 5: mountain tunnel frames
+fn render_tunnel_frames(game_state: &GameState) {
+    if let Some(active_idx) = game_state.level_active {
+        let grid_x = active_idx % 3;
+        let grid_y = active_idx / 3;
+
+        for dy in -1..=1 {
+            for dx in -1..=1 {
+                let nx = grid_x as i32 + dx;
+                let ny = grid_y as i32 + dy;
+
+                if nx >= 0 && nx < 3 && ny >= 0 && ny < 3 {
+                    let neighbor_idx = (ny * 3 + nx) as usize;
+                    let level = &game_state.levels[neighbor_idx];
+
+                    let grid_offset = level.grid_offset();
+                    let grid_origin = level.pos_world + grid_offset;
+
+                    for (tile_pos, tile_type) in &level.tile_layout {
+                        let x = grid_origin.x + (tile_pos.x as f32 * TILE_SIZE_X);
+                        let y = grid_origin.y + (tile_pos.y as f32 * TILE_SIZE_Y);
+
+                        let texture = match tile_type {
+                            TileType::TunnelUpOpen | TileType::TunnelUpClosed => {
+                                Some(&game_state.texture_mountain_tunnel_u)
+                            }
+                            TileType::TunnelDownOpen | TileType::TunnelDownClosed => {
+                                Some(&game_state.texture_mountain_tunnel_d)
+                            }
+                            TileType::TunnelLeftOpen | TileType::TunnelLeftClosed => {
+                                Some(&game_state.texture_mountain_tunnel_l)
+                            }
+                            TileType::TunnelRightOpen | TileType::TunnelRightClosed => {
+                                Some(&game_state.texture_mountain_tunnel_r)
+                            }
+                            _ => None,
+                        };
+
+                        if let Some(tex) = texture {
+                            draw_texture(tex, x, y, WHITE);
+                        }
                     }
                 }
             }

@@ -99,6 +99,16 @@ pub struct GameState {
     pub texture_mountain_tunnel_l: Texture2D,
     pub texture_mountain_tunnel_r: Texture2D,
 
+    // Tunnel holes
+    pub texture_mountain_tunnel_hole_open_u: Texture2D,
+    pub texture_mountain_tunnel_hole_open_d: Texture2D,
+    pub texture_mountain_tunnel_hole_open_l: Texture2D,
+    pub texture_mountain_tunnel_hole_open_r: Texture2D,
+    pub texture_mountain_tunnel_hole_closed_u: Texture2D,
+    pub texture_mountain_tunnel_hole_closed_d: Texture2D,
+    pub texture_mountain_tunnel_hole_closed_l: Texture2D,
+    pub texture_mountain_tunnel_hole_closed_r: Texture2D,
+
     // Train
     pub texture_train_l_001: Texture2D,
     pub texture_train_r_001: Texture2D,
@@ -127,7 +137,23 @@ impl GameState {
 
         // Initialize train position and direction based on first level's default start
         let train_tile_pos = levels[0].default_train_start;
-        let train_direction = TrainDirection::Left; // Start facing left (entering from right)
+        let train_direction = {
+            let w = levels[0].grid_tiles.x;
+            let h = levels[0].grid_tiles.y;
+            let start = train_tile_pos;
+
+            if start.x == -1 {
+                TrainDirection::Right // Left tunnel, entering right
+            } else if start.x == w {
+                TrainDirection::Left // Right tunnel, entering left
+            } else if start.y == -1 {
+                TrainDirection::Down // Top tunnel, entering down
+            } else if start.y == h {
+                TrainDirection::Up // Bottom tunnel, entering up
+            } else {
+                TrainDirection::Right // Default
+            }
+        };
 
         let texture_background_01 = load_texture("assets/sprites/background.png").await.unwrap();
         let texture_track_h = load_texture("assets/sprites/track_h.png").await.unwrap();
@@ -182,6 +208,32 @@ impl GameState {
             .await
             .unwrap();
 
+        // Tunnel holes
+        let texture_mountain_tunnel_hole_open_u = load_texture("assets/sprites/mountain_tunnel_hole_open_u.png")
+            .await
+            .unwrap();
+        let texture_mountain_tunnel_hole_open_d = load_texture("assets/sprites/mountain_tunnel_hole_open_d.png")
+            .await
+            .unwrap();
+        let texture_mountain_tunnel_hole_open_l = load_texture("assets/sprites/mountain_tunnel_hole_open_l.png")
+            .await
+            .unwrap();
+        let texture_mountain_tunnel_hole_open_r = load_texture("assets/sprites/mountain_tunnel_hole_open_r.png")
+            .await
+            .unwrap();
+        let texture_mountain_tunnel_hole_closed_u = load_texture("assets/sprites/mountain_tunnel_hole_closed_u.png")
+            .await
+            .unwrap();
+        let texture_mountain_tunnel_hole_closed_d = load_texture("assets/sprites/mountain_tunnel_hole_closed_d.png")
+            .await
+            .unwrap();
+        let texture_mountain_tunnel_hole_closed_l = load_texture("assets/sprites/mountain_tunnel_hole_closed_l.png")
+            .await
+            .unwrap();
+        let texture_mountain_tunnel_hole_closed_r = load_texture("assets/sprites/mountain_tunnel_hole_closed_r.png")
+            .await
+            .unwrap();
+
         let texture_train_l_001 = load_texture("assets/sprites/train_front_l_001.png")
             .await
             .unwrap();
@@ -230,6 +282,15 @@ impl GameState {
             texture_mountain_tunnel_d,
             texture_mountain_tunnel_l,
             texture_mountain_tunnel_r,
+
+            texture_mountain_tunnel_hole_open_u,
+            texture_mountain_tunnel_hole_open_d,
+            texture_mountain_tunnel_hole_open_l,
+            texture_mountain_tunnel_hole_open_r,
+            texture_mountain_tunnel_hole_closed_u,
+            texture_mountain_tunnel_hole_closed_d,
+            texture_mountain_tunnel_hole_closed_l,
+            texture_mountain_tunnel_hole_closed_r,
 
             texture_train_l_001,
             texture_train_r_001,
@@ -343,13 +404,8 @@ impl GameState {
         let h = grid_size.y;
 
         // Level 1-1 (grid 0,0 - has neighbors: right 1-2, down 2-1)
-        // Default start: right tunnel (first one at w/3)
-        let mut level = Level::new(
-            "1-1",
-            grid_size,
-            f32::vec2(0.0, 0.0),
-            IVec2::new(w - 1, h / 3),
-        );
+        // Default start: right tunnel (first one at h/3)
+        let mut level = Level::new("1-1", grid_size, f32::vec2(0.0, 0.0), IVec2::new(w, h / 3));
         level
             .tile_layout
             .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerUL);
@@ -410,7 +466,7 @@ impl GameState {
             "1-2",
             grid_size,
             f32::vec2(SCREEN_W, 0.0),
-            IVec2::new(0, h / 3),
+            IVec2::new(-1, h / 3),
         );
         level
             .tile_layout
@@ -482,7 +538,7 @@ impl GameState {
             "1-3",
             grid_size,
             f32::vec2(SCREEN_W * 2.0, 0.0),
-            IVec2::new(0, h / 3),
+            IVec2::new(-1, h / 3),
         );
         level
             .tile_layout
@@ -544,7 +600,7 @@ impl GameState {
             "2-1",
             grid_size,
             f32::vec2(0.0, SCREEN_H),
-            IVec2::new(w / 3, 0),
+            IVec2::new(w / 3, -1),
         );
         level
             .tile_layout
@@ -616,7 +672,7 @@ impl GameState {
             "2-2",
             grid_size,
             f32::vec2(SCREEN_W, SCREEN_H),
-            IVec2::new(w / 3, 0),
+            IVec2::new(w / 3, -1),
         );
         level
             .tile_layout
@@ -698,7 +754,7 @@ impl GameState {
             "2-3",
             grid_size,
             f32::vec2(SCREEN_W * 2.0, SCREEN_H),
-            IVec2::new(w / 3, 0),
+            IVec2::new(w / 3, -1),
         );
         level
             .tile_layout
@@ -770,7 +826,7 @@ impl GameState {
             "3-1",
             grid_size,
             f32::vec2(0.0, SCREEN_H * 2.0),
-            IVec2::new(w / 3, 0),
+            IVec2::new(w / 3, -1),
         );
         level
             .tile_layout
@@ -832,7 +888,7 @@ impl GameState {
             "3-2",
             grid_size,
             f32::vec2(SCREEN_W, SCREEN_H * 2.0),
-            IVec2::new(w / 3, 0),
+            IVec2::new(w / 3, -1),
         );
         level
             .tile_layout
@@ -904,7 +960,7 @@ impl GameState {
             "3-3",
             grid_size,
             f32::vec2(SCREEN_W * 2.0, SCREEN_H * 2.0),
-            IVec2::new(w / 3, 0),
+            IVec2::new(w / 3, -1),
         );
         level
             .tile_layout
