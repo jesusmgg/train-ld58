@@ -18,23 +18,12 @@ async fn main() {
     let mut game_state = GameState::new().await;
 
     loop {
-        // Game logic update
-        if is_key_down(KeyCode::W) {
-            game_state.camera.target.y = (game_state.camera.target.y + 1.0).round();
-        }
-        if is_key_down(KeyCode::A) {
-            game_state.camera.target.x = (game_state.camera.target.x - 1.0).round();
-        }
-        if is_key_down(KeyCode::S) {
-            game_state.camera.target.y = (game_state.camera.target.y - 1.0).round();
-        }
-        if is_key_down(KeyCode::D) {
-            game_state.camera.target.x = (game_state.camera.target.x + 1.0).round();
-        }
-
+        // Input
         game_state.mouse_pos = game_state
             .camera
             .screen_to_world(f32::Vec2::from(mouse_position()));
+
+        // Game logic update
         update_sim(&mut game_state);
 
         // Render

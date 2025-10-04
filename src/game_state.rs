@@ -4,7 +4,7 @@ use macroquad::{
     math::{f32, IVec2, Rect},
     shapes::draw_rectangle,
     texture::{load_texture, Texture2D},
-    window::{clear_background, screen_width, screen_height},
+    window::{clear_background, screen_height, screen_width},
 };
 
 use crate::constants::*;
@@ -104,7 +104,44 @@ impl GameState {
     }
 
     pub fn create_levels() -> Vec<Level> {
-        Vec::new()
+        let mut levels = Vec::with_capacity(9);
+
+        // 3x3 grid of levels, each at full screen size intervals
+        levels.push(Level::new("1-1", IVec2::ZERO, f32::vec2(0.0, 0.0)));
+        levels.push(Level::new("1-2", IVec2::ZERO, f32::vec2(SCREEN_W, 0.0)));
+        levels.push(Level::new(
+            "1-3",
+            IVec2::ZERO,
+            f32::vec2(SCREEN_W * 2.0, 0.0),
+        ));
+        levels.push(Level::new("2-1", IVec2::ZERO, f32::vec2(0.0, SCREEN_H)));
+        levels.push(Level::new(
+            "2-2",
+            IVec2::ZERO,
+            f32::vec2(SCREEN_W, SCREEN_H),
+        ));
+        levels.push(Level::new(
+            "2-3",
+            IVec2::ZERO,
+            f32::vec2(SCREEN_W * 2.0, SCREEN_H),
+        ));
+        levels.push(Level::new(
+            "3-1",
+            IVec2::ZERO,
+            f32::vec2(0.0, SCREEN_H * 2.0),
+        ));
+        levels.push(Level::new(
+            "3-2",
+            IVec2::ZERO,
+            f32::vec2(SCREEN_W, SCREEN_H * 2.0),
+        ));
+        levels.push(Level::new(
+            "3-3",
+            IVec2::ZERO,
+            f32::vec2(SCREEN_W * 2.0, SCREEN_H * 2.0),
+        ));
+
+        levels
     }
 
     fn get_camera() -> Camera2D {
@@ -138,17 +175,19 @@ impl GameState {
 pub struct Level {
     pub name: &'static str,
     pub grid_tiles: IVec2,
+    pub pos_world: f32::Vec2,
 
     pub is_setup: bool,
 }
 
 impl Level {
-    pub fn new(name: &'static str, grid_tiles: IVec2) -> Self {
+    pub fn new(name: &'static str, grid_tiles: IVec2, pos_world: f32::Vec2) -> Self {
         let is_setup = false;
 
         Self {
             name,
             grid_tiles,
+            pos_world,
 
             is_setup,
         }
