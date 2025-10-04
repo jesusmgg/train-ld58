@@ -660,7 +660,16 @@ fn render_selected_tile_preview(game_state: &GameState) {
                 let mut color = WHITE;
                 color.a = 0.5;
 
-                draw_texture(texture, x, y, color);
+                draw_texture_ex(
+                    texture,
+                    x,
+                    y,
+                    color,
+                    DrawTextureParams {
+                        flip_y: true,
+                        ..Default::default()
+                    },
+                );
             }
         }
     }
@@ -706,7 +715,16 @@ fn render_placed_tiles(game_state: &GameState) {
                         let y = grid_origin.y + (tile_pos.y as f32 * TILE_SIZE_Y);
 
                         let texture = game_state.get_texture_for_tile(*tile_type);
-                        draw_texture(texture, x, y, WHITE);
+                        draw_texture_ex(
+                            texture,
+                            x,
+                            y,
+                            WHITE,
+                            DrawTextureParams {
+                                flip_y: true,
+                                ..Default::default()
+                            },
+                        );
                     }
                 }
             }

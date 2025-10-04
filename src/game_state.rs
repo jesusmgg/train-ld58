@@ -213,7 +213,7 @@ impl GameState {
         let texture_mountain_tunnel_d = load_texture("assets/sprites/mountain_tunnel_d.png")
             .await
             .unwrap();
-        let texture_mountain_tunnel_l = load_texture("assets/sprites/mountain_tunnel_L.png")
+        let texture_mountain_tunnel_l = load_texture("assets/sprites/mountain_tunnel_l.png")
             .await
             .unwrap();
         let texture_mountain_tunnel_r = load_texture("assets/sprites/mountain_tunnel_r.png")
