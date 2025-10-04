@@ -13,6 +13,14 @@ use crate::constants::*;
 use crate::{styles::Styles, text::draw_scaled_text};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TrainDirection {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TileType {
     // Track pieces
     TrackHorizontal,
@@ -90,6 +98,12 @@ pub struct GameState {
     pub texture_mountain_tunnel_d: Texture2D,
     pub texture_mountain_tunnel_l: Texture2D,
     pub texture_mountain_tunnel_r: Texture2D,
+
+    // Train
+    pub texture_train_l_001: Texture2D,
+    pub texture_train_r_001: Texture2D,
+    pub train_tile_pos: IVec2, // Grid position within current level
+    pub train_direction: TrainDirection,
 }
 
 impl GameState {
@@ -110,6 +124,10 @@ impl GameState {
         // let level_active = Some(levels.len() - 1);
 
         let selected_tile = None;
+
+        // Initialize train position and direction based on first level's default start
+        let train_tile_pos = levels[0].default_train_start;
+        let train_direction = TrainDirection::Left; // Start facing left (entering from right)
 
         let texture_background_01 = load_texture("assets/sprites/background.png").await.unwrap();
         let texture_track_h = load_texture("assets/sprites/track_h.png").await.unwrap();
@@ -164,6 +182,13 @@ impl GameState {
             .await
             .unwrap();
 
+        let texture_train_l_001 = load_texture("assets/sprites/train_front_l_001.png")
+            .await
+            .unwrap();
+        let texture_train_r_001 = load_texture("assets/sprites/train_front_r_001.png")
+            .await
+            .unwrap();
+
         let sfx_hover_01 = load_sound("assets/sfx/hover_02.ogg").await.unwrap();
         let sfx_explosion_01 = load_sound("assets/sfx/explosion_01.ogg").await.unwrap();
         let sfx_level_start_01 = load_sound("assets/sfx/level_start_01.ogg").await.unwrap();
@@ -205,6 +230,11 @@ impl GameState {
             texture_mountain_tunnel_d,
             texture_mountain_tunnel_l,
             texture_mountain_tunnel_r,
+
+            texture_train_l_001,
+            texture_train_r_001,
+            train_tile_pos,
+            train_direction,
         }
     }
 
@@ -241,9 +271,15 @@ impl GameState {
             TileType::MountainBorderCornerDR => &self.texture_mountain_border_corner_dr,
 
             TileType::TunnelUpOpen | TileType::TunnelUpClosed => &self.texture_mountain_tunnel_u,
-            TileType::TunnelDownOpen | TileType::TunnelDownClosed => &self.texture_mountain_tunnel_d,
-            TileType::TunnelLeftOpen | TileType::TunnelLeftClosed => &self.texture_mountain_tunnel_l,
-            TileType::TunnelRightOpen | TileType::TunnelRightClosed => &self.texture_mountain_tunnel_r,
+            TileType::TunnelDownOpen | TileType::TunnelDownClosed => {
+                &self.texture_mountain_tunnel_d
+            }
+            TileType::TunnelLeftOpen | TileType::TunnelLeftClosed => {
+                &self.texture_mountain_tunnel_l
+            }
+            TileType::TunnelRightOpen | TileType::TunnelRightClosed => {
+                &self.texture_mountain_tunnel_r
+            }
 
             _ => &self.texture_placeholder,
         }
@@ -307,207 +343,621 @@ impl GameState {
         let h = grid_size.y;
 
         // Level 1-1 (grid 0,0 - has neighbors: right 1-2, down 2-1)
-        let mut level = Level::new("1-1", grid_size, f32::vec2(0.0, 0.0));
-        level.tile_layout.insert(IVec2::new(-1, -1), TileType::MountainBorderCornerUL);
-        level.tile_layout.insert(IVec2::new(w, -1), TileType::MountainBorderCornerUR);
-        level.tile_layout.insert(IVec2::new(-1, h), TileType::MountainBorderCornerDL);
-        level.tile_layout.insert(IVec2::new(w, h), TileType::MountainBorderCornerDR);
-        for x in 0..w { level.tile_layout.insert(IVec2::new(x, -1), TileType::MountainBorderUp); }
+        // Default start: right tunnel (first one at w/3)
+        let mut level = Level::new(
+            "1-1",
+            grid_size,
+            f32::vec2(0.0, 0.0),
+            IVec2::new(w - 1, h / 3),
+        );
+        level
+            .tile_layout
+            .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerUL);
+        level
+            .tile_layout
+            .insert(IVec2::new(w, -1), TileType::MountainBorderCornerUR);
+        level
+            .tile_layout
+            .insert(IVec2::new(-1, h), TileType::MountainBorderCornerDL);
+        level
+            .tile_layout
+            .insert(IVec2::new(w, h), TileType::MountainBorderCornerDR);
         for x in 0..w {
-            if x == w / 3 { level.tile_layout.insert(IVec2::new(x, h), TileType::TunnelDownOpen); }
-            else if x == 2 * w / 3 { level.tile_layout.insert(IVec2::new(x, h), TileType::TunnelDownClosed); }
-            else { level.tile_layout.insert(IVec2::new(x, h), TileType::MountainBorderDown); }
+            level
+                .tile_layout
+                .insert(IVec2::new(x, -1), TileType::MountainBorderUp);
         }
-        for y in 0..h { level.tile_layout.insert(IVec2::new(-1, y), TileType::MountainBorderLeft); }
+        for x in 0..w {
+            if x == w / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, h), TileType::TunnelDownOpen);
+            } else if x == 2 * w / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, h), TileType::TunnelDownClosed);
+            } else {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, h), TileType::MountainBorderDown);
+            }
+        }
         for y in 0..h {
-            if y == h / 3 { level.tile_layout.insert(IVec2::new(w, y), TileType::TunnelRightOpen); }
-            else if y == 2 * h / 3 { level.tile_layout.insert(IVec2::new(w, y), TileType::TunnelRightClosed); }
-            else { level.tile_layout.insert(IVec2::new(w, y), TileType::MountainBorderRight); }
+            level
+                .tile_layout
+                .insert(IVec2::new(-1, y), TileType::MountainBorderLeft);
+        }
+        for y in 0..h {
+            if y == h / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(w, y), TileType::TunnelRightOpen);
+            } else if y == 2 * h / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(w, y), TileType::TunnelRightClosed);
+            } else {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(w, y), TileType::MountainBorderRight);
+            }
         }
         levels.push(level);
 
         // Level 1-2 (grid 1,0 - has neighbors: left 1-1, right 1-3, down 2-2)
-        let mut level = Level::new("1-2", grid_size, f32::vec2(SCREEN_W, 0.0));
-        level.tile_layout.insert(IVec2::new(-1, -1), TileType::MountainBorderCornerUL);
-        level.tile_layout.insert(IVec2::new(w, -1), TileType::MountainBorderCornerUR);
-        level.tile_layout.insert(IVec2::new(-1, h), TileType::MountainBorderCornerDL);
-        level.tile_layout.insert(IVec2::new(w, h), TileType::MountainBorderCornerDR);
-        for x in 0..w { level.tile_layout.insert(IVec2::new(x, -1), TileType::MountainBorderUp); }
+        // Default start: left tunnel (first one at h/3)
+        let mut level = Level::new(
+            "1-2",
+            grid_size,
+            f32::vec2(SCREEN_W, 0.0),
+            IVec2::new(0, h / 3),
+        );
+        level
+            .tile_layout
+            .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerUL);
+        level
+            .tile_layout
+            .insert(IVec2::new(w, -1), TileType::MountainBorderCornerUR);
+        level
+            .tile_layout
+            .insert(IVec2::new(-1, h), TileType::MountainBorderCornerDL);
+        level
+            .tile_layout
+            .insert(IVec2::new(w, h), TileType::MountainBorderCornerDR);
         for x in 0..w {
-            if x == w / 3 { level.tile_layout.insert(IVec2::new(x, h), TileType::TunnelDownOpen); }
-            else if x == 2 * w / 3 { level.tile_layout.insert(IVec2::new(x, h), TileType::TunnelDownClosed); }
-            else { level.tile_layout.insert(IVec2::new(x, h), TileType::MountainBorderDown); }
+            level
+                .tile_layout
+                .insert(IVec2::new(x, -1), TileType::MountainBorderUp);
+        }
+        for x in 0..w {
+            if x == w / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, h), TileType::TunnelDownOpen);
+            } else if x == 2 * w / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, h), TileType::TunnelDownClosed);
+            } else {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, h), TileType::MountainBorderDown);
+            }
         }
         for y in 0..h {
-            if y == h / 3 { level.tile_layout.insert(IVec2::new(-1, y), TileType::TunnelLeftOpen); }
-            else if y == 2 * h / 3 { level.tile_layout.insert(IVec2::new(-1, y), TileType::TunnelLeftClosed); }
-            else { level.tile_layout.insert(IVec2::new(-1, y), TileType::MountainBorderLeft); }
+            if y == h / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(-1, y), TileType::TunnelLeftOpen);
+            } else if y == 2 * h / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(-1, y), TileType::TunnelLeftClosed);
+            } else {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(-1, y), TileType::MountainBorderLeft);
+            }
         }
         for y in 0..h {
-            if y == h / 3 { level.tile_layout.insert(IVec2::new(w, y), TileType::TunnelRightOpen); }
-            else if y == 2 * h / 3 { level.tile_layout.insert(IVec2::new(w, y), TileType::TunnelRightClosed); }
-            else { level.tile_layout.insert(IVec2::new(w, y), TileType::MountainBorderRight); }
+            if y == h / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(w, y), TileType::TunnelRightOpen);
+            } else if y == 2 * h / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(w, y), TileType::TunnelRightClosed);
+            } else {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(w, y), TileType::MountainBorderRight);
+            }
         }
         levels.push(level);
 
         // Level 1-3 (grid 2,0 - has neighbors: left 1-2, down 2-3)
-        let mut level = Level::new("1-3", grid_size, f32::vec2(SCREEN_W * 2.0, 0.0));
-        level.tile_layout.insert(IVec2::new(-1, -1), TileType::MountainBorderCornerUL);
-        level.tile_layout.insert(IVec2::new(w, -1), TileType::MountainBorderCornerUR);
-        level.tile_layout.insert(IVec2::new(-1, h), TileType::MountainBorderCornerDL);
-        level.tile_layout.insert(IVec2::new(w, h), TileType::MountainBorderCornerDR);
-        for x in 0..w { level.tile_layout.insert(IVec2::new(x, -1), TileType::MountainBorderUp); }
+        // Default start: left tunnel (first one at h/3)
+        let mut level = Level::new(
+            "1-3",
+            grid_size,
+            f32::vec2(SCREEN_W * 2.0, 0.0),
+            IVec2::new(0, h / 3),
+        );
+        level
+            .tile_layout
+            .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerUL);
+        level
+            .tile_layout
+            .insert(IVec2::new(w, -1), TileType::MountainBorderCornerUR);
+        level
+            .tile_layout
+            .insert(IVec2::new(-1, h), TileType::MountainBorderCornerDL);
+        level
+            .tile_layout
+            .insert(IVec2::new(w, h), TileType::MountainBorderCornerDR);
         for x in 0..w {
-            if x == w / 3 { level.tile_layout.insert(IVec2::new(x, h), TileType::TunnelDownOpen); }
-            else if x == 2 * w / 3 { level.tile_layout.insert(IVec2::new(x, h), TileType::TunnelDownClosed); }
-            else { level.tile_layout.insert(IVec2::new(x, h), TileType::MountainBorderDown); }
+            level
+                .tile_layout
+                .insert(IVec2::new(x, -1), TileType::MountainBorderUp);
+        }
+        for x in 0..w {
+            if x == w / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, h), TileType::TunnelDownOpen);
+            } else if x == 2 * w / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, h), TileType::TunnelDownClosed);
+            } else {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, h), TileType::MountainBorderDown);
+            }
         }
         for y in 0..h {
-            if y == h / 3 { level.tile_layout.insert(IVec2::new(-1, y), TileType::TunnelLeftOpen); }
-            else if y == 2 * h / 3 { level.tile_layout.insert(IVec2::new(-1, y), TileType::TunnelLeftClosed); }
-            else { level.tile_layout.insert(IVec2::new(-1, y), TileType::MountainBorderLeft); }
+            if y == h / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(-1, y), TileType::TunnelLeftOpen);
+            } else if y == 2 * h / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(-1, y), TileType::TunnelLeftClosed);
+            } else {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(-1, y), TileType::MountainBorderLeft);
+            }
         }
-        for y in 0..h { level.tile_layout.insert(IVec2::new(w, y), TileType::MountainBorderRight); }
+        for y in 0..h {
+            level
+                .tile_layout
+                .insert(IVec2::new(w, y), TileType::MountainBorderRight);
+        }
         levels.push(level);
 
         // Level 2-1 (grid 0,1 - has neighbors: up 1-1, right 2-2, down 3-1)
-        let mut level = Level::new("2-1", grid_size, f32::vec2(0.0, SCREEN_H));
-        level.tile_layout.insert(IVec2::new(-1, -1), TileType::MountainBorderCornerUL);
-        level.tile_layout.insert(IVec2::new(w, -1), TileType::MountainBorderCornerUR);
-        level.tile_layout.insert(IVec2::new(-1, h), TileType::MountainBorderCornerDL);
-        level.tile_layout.insert(IVec2::new(w, h), TileType::MountainBorderCornerDR);
+        // Default start: top tunnel (first one at w/3)
+        let mut level = Level::new(
+            "2-1",
+            grid_size,
+            f32::vec2(0.0, SCREEN_H),
+            IVec2::new(w / 3, 0),
+        );
+        level
+            .tile_layout
+            .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerUL);
+        level
+            .tile_layout
+            .insert(IVec2::new(w, -1), TileType::MountainBorderCornerUR);
+        level
+            .tile_layout
+            .insert(IVec2::new(-1, h), TileType::MountainBorderCornerDL);
+        level
+            .tile_layout
+            .insert(IVec2::new(w, h), TileType::MountainBorderCornerDR);
         for x in 0..w {
-            if x == w / 3 { level.tile_layout.insert(IVec2::new(x, -1), TileType::TunnelUpOpen); }
-            else if x == 2 * w / 3 { level.tile_layout.insert(IVec2::new(x, -1), TileType::TunnelUpClosed); }
-            else { level.tile_layout.insert(IVec2::new(x, -1), TileType::MountainBorderUp); }
+            if x == w / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, -1), TileType::TunnelUpOpen);
+            } else if x == 2 * w / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, -1), TileType::TunnelUpClosed);
+            } else {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, -1), TileType::MountainBorderUp);
+            }
         }
         for x in 0..w {
-            if x == w / 3 { level.tile_layout.insert(IVec2::new(x, h), TileType::TunnelDownOpen); }
-            else if x == 2 * w / 3 { level.tile_layout.insert(IVec2::new(x, h), TileType::TunnelDownClosed); }
-            else { level.tile_layout.insert(IVec2::new(x, h), TileType::MountainBorderDown); }
+            if x == w / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, h), TileType::TunnelDownOpen);
+            } else if x == 2 * w / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, h), TileType::TunnelDownClosed);
+            } else {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, h), TileType::MountainBorderDown);
+            }
         }
-        for y in 0..h { level.tile_layout.insert(IVec2::new(-1, y), TileType::MountainBorderLeft); }
         for y in 0..h {
-            if y == h / 3 { level.tile_layout.insert(IVec2::new(w, y), TileType::TunnelRightOpen); }
-            else if y == 2 * h / 3 { level.tile_layout.insert(IVec2::new(w, y), TileType::TunnelRightClosed); }
-            else { level.tile_layout.insert(IVec2::new(w, y), TileType::MountainBorderRight); }
+            level
+                .tile_layout
+                .insert(IVec2::new(-1, y), TileType::MountainBorderLeft);
+        }
+        for y in 0..h {
+            if y == h / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(w, y), TileType::TunnelRightOpen);
+            } else if y == 2 * h / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(w, y), TileType::TunnelRightClosed);
+            } else {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(w, y), TileType::MountainBorderRight);
+            }
         }
         levels.push(level);
 
         // Level 2-2 (grid 1,1 - has neighbors: up 1-2, left 2-1, right 2-3, down 3-2)
-        let mut level = Level::new("2-2", grid_size, f32::vec2(SCREEN_W, SCREEN_H));
-        level.tile_layout.insert(IVec2::new(-1, -1), TileType::MountainBorderCornerUL);
-        level.tile_layout.insert(IVec2::new(w, -1), TileType::MountainBorderCornerUR);
-        level.tile_layout.insert(IVec2::new(-1, h), TileType::MountainBorderCornerDL);
-        level.tile_layout.insert(IVec2::new(w, h), TileType::MountainBorderCornerDR);
+        // Default start: top tunnel (first one at w/3)
+        let mut level = Level::new(
+            "2-2",
+            grid_size,
+            f32::vec2(SCREEN_W, SCREEN_H),
+            IVec2::new(w / 3, 0),
+        );
+        level
+            .tile_layout
+            .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerUL);
+        level
+            .tile_layout
+            .insert(IVec2::new(w, -1), TileType::MountainBorderCornerUR);
+        level
+            .tile_layout
+            .insert(IVec2::new(-1, h), TileType::MountainBorderCornerDL);
+        level
+            .tile_layout
+            .insert(IVec2::new(w, h), TileType::MountainBorderCornerDR);
         for x in 0..w {
-            if x == w / 3 { level.tile_layout.insert(IVec2::new(x, -1), TileType::TunnelUpOpen); }
-            else if x == 2 * w / 3 { level.tile_layout.insert(IVec2::new(x, -1), TileType::TunnelUpClosed); }
-            else { level.tile_layout.insert(IVec2::new(x, -1), TileType::MountainBorderUp); }
+            if x == w / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, -1), TileType::TunnelUpOpen);
+            } else if x == 2 * w / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, -1), TileType::TunnelUpClosed);
+            } else {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, -1), TileType::MountainBorderUp);
+            }
         }
         for x in 0..w {
-            if x == w / 3 { level.tile_layout.insert(IVec2::new(x, h), TileType::TunnelDownOpen); }
-            else if x == 2 * w / 3 { level.tile_layout.insert(IVec2::new(x, h), TileType::TunnelDownClosed); }
-            else { level.tile_layout.insert(IVec2::new(x, h), TileType::MountainBorderDown); }
+            if x == w / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, h), TileType::TunnelDownOpen);
+            } else if x == 2 * w / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, h), TileType::TunnelDownClosed);
+            } else {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, h), TileType::MountainBorderDown);
+            }
         }
         for y in 0..h {
-            if y == h / 3 { level.tile_layout.insert(IVec2::new(-1, y), TileType::TunnelLeftOpen); }
-            else if y == 2 * h / 3 { level.tile_layout.insert(IVec2::new(-1, y), TileType::TunnelLeftClosed); }
-            else { level.tile_layout.insert(IVec2::new(-1, y), TileType::MountainBorderLeft); }
+            if y == h / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(-1, y), TileType::TunnelLeftOpen);
+            } else if y == 2 * h / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(-1, y), TileType::TunnelLeftClosed);
+            } else {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(-1, y), TileType::MountainBorderLeft);
+            }
         }
         for y in 0..h {
-            if y == h / 3 { level.tile_layout.insert(IVec2::new(w, y), TileType::TunnelRightOpen); }
-            else if y == 2 * h / 3 { level.tile_layout.insert(IVec2::new(w, y), TileType::TunnelRightClosed); }
-            else { level.tile_layout.insert(IVec2::new(w, y), TileType::MountainBorderRight); }
+            if y == h / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(w, y), TileType::TunnelRightOpen);
+            } else if y == 2 * h / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(w, y), TileType::TunnelRightClosed);
+            } else {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(w, y), TileType::MountainBorderRight);
+            }
         }
         levels.push(level);
 
         // Level 2-3 (grid 2,1 - has neighbors: up 1-3, left 2-2, down 3-3)
-        let mut level = Level::new("2-3", grid_size, f32::vec2(SCREEN_W * 2.0, SCREEN_H));
-        level.tile_layout.insert(IVec2::new(-1, -1), TileType::MountainBorderCornerUL);
-        level.tile_layout.insert(IVec2::new(w, -1), TileType::MountainBorderCornerUR);
-        level.tile_layout.insert(IVec2::new(-1, h), TileType::MountainBorderCornerDL);
-        level.tile_layout.insert(IVec2::new(w, h), TileType::MountainBorderCornerDR);
+        // Default start: top tunnel (first one at w/3)
+        let mut level = Level::new(
+            "2-3",
+            grid_size,
+            f32::vec2(SCREEN_W * 2.0, SCREEN_H),
+            IVec2::new(w / 3, 0),
+        );
+        level
+            .tile_layout
+            .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerUL);
+        level
+            .tile_layout
+            .insert(IVec2::new(w, -1), TileType::MountainBorderCornerUR);
+        level
+            .tile_layout
+            .insert(IVec2::new(-1, h), TileType::MountainBorderCornerDL);
+        level
+            .tile_layout
+            .insert(IVec2::new(w, h), TileType::MountainBorderCornerDR);
         for x in 0..w {
-            if x == w / 3 { level.tile_layout.insert(IVec2::new(x, -1), TileType::TunnelUpOpen); }
-            else if x == 2 * w / 3 { level.tile_layout.insert(IVec2::new(x, -1), TileType::TunnelUpClosed); }
-            else { level.tile_layout.insert(IVec2::new(x, -1), TileType::MountainBorderUp); }
+            if x == w / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, -1), TileType::TunnelUpOpen);
+            } else if x == 2 * w / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, -1), TileType::TunnelUpClosed);
+            } else {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, -1), TileType::MountainBorderUp);
+            }
         }
         for x in 0..w {
-            if x == w / 3 { level.tile_layout.insert(IVec2::new(x, h), TileType::TunnelDownOpen); }
-            else if x == 2 * w / 3 { level.tile_layout.insert(IVec2::new(x, h), TileType::TunnelDownClosed); }
-            else { level.tile_layout.insert(IVec2::new(x, h), TileType::MountainBorderDown); }
+            if x == w / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, h), TileType::TunnelDownOpen);
+            } else if x == 2 * w / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, h), TileType::TunnelDownClosed);
+            } else {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, h), TileType::MountainBorderDown);
+            }
         }
         for y in 0..h {
-            if y == h / 3 { level.tile_layout.insert(IVec2::new(-1, y), TileType::TunnelLeftOpen); }
-            else if y == 2 * h / 3 { level.tile_layout.insert(IVec2::new(-1, y), TileType::TunnelLeftClosed); }
-            else { level.tile_layout.insert(IVec2::new(-1, y), TileType::MountainBorderLeft); }
+            if y == h / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(-1, y), TileType::TunnelLeftOpen);
+            } else if y == 2 * h / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(-1, y), TileType::TunnelLeftClosed);
+            } else {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(-1, y), TileType::MountainBorderLeft);
+            }
         }
-        for y in 0..h { level.tile_layout.insert(IVec2::new(w, y), TileType::MountainBorderRight); }
+        for y in 0..h {
+            level
+                .tile_layout
+                .insert(IVec2::new(w, y), TileType::MountainBorderRight);
+        }
         levels.push(level);
 
         // Level 3-1 (grid 0,2 - has neighbors: up 2-1, right 3-2)
-        let mut level = Level::new("3-1", grid_size, f32::vec2(0.0, SCREEN_H * 2.0));
-        level.tile_layout.insert(IVec2::new(-1, -1), TileType::MountainBorderCornerUL);
-        level.tile_layout.insert(IVec2::new(w, -1), TileType::MountainBorderCornerUR);
-        level.tile_layout.insert(IVec2::new(-1, h), TileType::MountainBorderCornerDL);
-        level.tile_layout.insert(IVec2::new(w, h), TileType::MountainBorderCornerDR);
+        // Default start: top tunnel (first one at w/3)
+        let mut level = Level::new(
+            "3-1",
+            grid_size,
+            f32::vec2(0.0, SCREEN_H * 2.0),
+            IVec2::new(w / 3, 0),
+        );
+        level
+            .tile_layout
+            .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerUL);
+        level
+            .tile_layout
+            .insert(IVec2::new(w, -1), TileType::MountainBorderCornerUR);
+        level
+            .tile_layout
+            .insert(IVec2::new(-1, h), TileType::MountainBorderCornerDL);
+        level
+            .tile_layout
+            .insert(IVec2::new(w, h), TileType::MountainBorderCornerDR);
         for x in 0..w {
-            if x == w / 3 { level.tile_layout.insert(IVec2::new(x, -1), TileType::TunnelUpOpen); }
-            else if x == 2 * w / 3 { level.tile_layout.insert(IVec2::new(x, -1), TileType::TunnelUpClosed); }
-            else { level.tile_layout.insert(IVec2::new(x, -1), TileType::MountainBorderUp); }
+            if x == w / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, -1), TileType::TunnelUpOpen);
+            } else if x == 2 * w / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, -1), TileType::TunnelUpClosed);
+            } else {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, -1), TileType::MountainBorderUp);
+            }
         }
-        for x in 0..w { level.tile_layout.insert(IVec2::new(x, h), TileType::MountainBorderDown); }
-        for y in 0..h { level.tile_layout.insert(IVec2::new(-1, y), TileType::MountainBorderLeft); }
+        for x in 0..w {
+            level
+                .tile_layout
+                .insert(IVec2::new(x, h), TileType::MountainBorderDown);
+        }
         for y in 0..h {
-            if y == h / 3 { level.tile_layout.insert(IVec2::new(w, y), TileType::TunnelRightOpen); }
-            else if y == 2 * h / 3 { level.tile_layout.insert(IVec2::new(w, y), TileType::TunnelRightClosed); }
-            else { level.tile_layout.insert(IVec2::new(w, y), TileType::MountainBorderRight); }
+            level
+                .tile_layout
+                .insert(IVec2::new(-1, y), TileType::MountainBorderLeft);
+        }
+        for y in 0..h {
+            if y == h / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(w, y), TileType::TunnelRightOpen);
+            } else if y == 2 * h / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(w, y), TileType::TunnelRightClosed);
+            } else {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(w, y), TileType::MountainBorderRight);
+            }
         }
         levels.push(level);
 
         // Level 3-2 (grid 1,2 - has neighbors: up 2-2, left 3-1, right 3-3)
-        let mut level = Level::new("3-2", grid_size, f32::vec2(SCREEN_W, SCREEN_H * 2.0));
-        level.tile_layout.insert(IVec2::new(-1, -1), TileType::MountainBorderCornerUL);
-        level.tile_layout.insert(IVec2::new(w, -1), TileType::MountainBorderCornerUR);
-        level.tile_layout.insert(IVec2::new(-1, h), TileType::MountainBorderCornerDL);
-        level.tile_layout.insert(IVec2::new(w, h), TileType::MountainBorderCornerDR);
+        // Default start: top tunnel (first one at w/3)
+        let mut level = Level::new(
+            "3-2",
+            grid_size,
+            f32::vec2(SCREEN_W, SCREEN_H * 2.0),
+            IVec2::new(w / 3, 0),
+        );
+        level
+            .tile_layout
+            .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerUL);
+        level
+            .tile_layout
+            .insert(IVec2::new(w, -1), TileType::MountainBorderCornerUR);
+        level
+            .tile_layout
+            .insert(IVec2::new(-1, h), TileType::MountainBorderCornerDL);
+        level
+            .tile_layout
+            .insert(IVec2::new(w, h), TileType::MountainBorderCornerDR);
         for x in 0..w {
-            if x == w / 3 { level.tile_layout.insert(IVec2::new(x, -1), TileType::TunnelUpOpen); }
-            else if x == 2 * w / 3 { level.tile_layout.insert(IVec2::new(x, -1), TileType::TunnelUpClosed); }
-            else { level.tile_layout.insert(IVec2::new(x, -1), TileType::MountainBorderUp); }
+            if x == w / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, -1), TileType::TunnelUpOpen);
+            } else if x == 2 * w / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, -1), TileType::TunnelUpClosed);
+            } else {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, -1), TileType::MountainBorderUp);
+            }
         }
-        for x in 0..w { level.tile_layout.insert(IVec2::new(x, h), TileType::MountainBorderDown); }
-        for y in 0..h {
-            if y == h / 3 { level.tile_layout.insert(IVec2::new(-1, y), TileType::TunnelLeftOpen); }
-            else if y == 2 * h / 3 { level.tile_layout.insert(IVec2::new(-1, y), TileType::TunnelLeftClosed); }
-            else { level.tile_layout.insert(IVec2::new(-1, y), TileType::MountainBorderLeft); }
+        for x in 0..w {
+            level
+                .tile_layout
+                .insert(IVec2::new(x, h), TileType::MountainBorderDown);
         }
         for y in 0..h {
-            if y == h / 3 { level.tile_layout.insert(IVec2::new(w, y), TileType::TunnelRightOpen); }
-            else if y == 2 * h / 3 { level.tile_layout.insert(IVec2::new(w, y), TileType::TunnelRightClosed); }
-            else { level.tile_layout.insert(IVec2::new(w, y), TileType::MountainBorderRight); }
+            if y == h / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(-1, y), TileType::TunnelLeftOpen);
+            } else if y == 2 * h / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(-1, y), TileType::TunnelLeftClosed);
+            } else {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(-1, y), TileType::MountainBorderLeft);
+            }
+        }
+        for y in 0..h {
+            if y == h / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(w, y), TileType::TunnelRightOpen);
+            } else if y == 2 * h / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(w, y), TileType::TunnelRightClosed);
+            } else {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(w, y), TileType::MountainBorderRight);
+            }
         }
         levels.push(level);
 
         // Level 3-3 (grid 2,2 - has neighbors: up 2-3, left 3-2)
-        let mut level = Level::new("3-3", grid_size, f32::vec2(SCREEN_W * 2.0, SCREEN_H * 2.0));
-        level.tile_layout.insert(IVec2::new(-1, -1), TileType::MountainBorderCornerUL);
-        level.tile_layout.insert(IVec2::new(w, -1), TileType::MountainBorderCornerUR);
-        level.tile_layout.insert(IVec2::new(-1, h), TileType::MountainBorderCornerDL);
-        level.tile_layout.insert(IVec2::new(w, h), TileType::MountainBorderCornerDR);
+        // Default start: top tunnel (first one at w/3)
+        let mut level = Level::new(
+            "3-3",
+            grid_size,
+            f32::vec2(SCREEN_W * 2.0, SCREEN_H * 2.0),
+            IVec2::new(w / 3, 0),
+        );
+        level
+            .tile_layout
+            .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerUL);
+        level
+            .tile_layout
+            .insert(IVec2::new(w, -1), TileType::MountainBorderCornerUR);
+        level
+            .tile_layout
+            .insert(IVec2::new(-1, h), TileType::MountainBorderCornerDL);
+        level
+            .tile_layout
+            .insert(IVec2::new(w, h), TileType::MountainBorderCornerDR);
         for x in 0..w {
-            if x == w / 3 { level.tile_layout.insert(IVec2::new(x, -1), TileType::TunnelUpOpen); }
-            else if x == 2 * w / 3 { level.tile_layout.insert(IVec2::new(x, -1), TileType::TunnelUpClosed); }
-            else { level.tile_layout.insert(IVec2::new(x, -1), TileType::MountainBorderUp); }
+            if x == w / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, -1), TileType::TunnelUpOpen);
+            } else if x == 2 * w / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, -1), TileType::TunnelUpClosed);
+            } else {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(x, -1), TileType::MountainBorderUp);
+            }
         }
-        for x in 0..w { level.tile_layout.insert(IVec2::new(x, h), TileType::MountainBorderDown); }
+        for x in 0..w {
+            level
+                .tile_layout
+                .insert(IVec2::new(x, h), TileType::MountainBorderDown);
+        }
         for y in 0..h {
-            if y == h / 3 { level.tile_layout.insert(IVec2::new(-1, y), TileType::TunnelLeftOpen); }
-            else if y == 2 * h / 3 { level.tile_layout.insert(IVec2::new(-1, y), TileType::TunnelLeftClosed); }
-            else { level.tile_layout.insert(IVec2::new(-1, y), TileType::MountainBorderLeft); }
+            if y == h / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(-1, y), TileType::TunnelLeftOpen);
+            } else if y == 2 * h / 3 {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(-1, y), TileType::TunnelLeftClosed);
+            } else {
+                level
+                    .tile_layout
+                    .insert(IVec2::new(-1, y), TileType::MountainBorderLeft);
+            }
         }
-        for y in 0..h { level.tile_layout.insert(IVec2::new(w, y), TileType::MountainBorderRight); }
+        for y in 0..h {
+            level
+                .tile_layout
+                .insert(IVec2::new(w, y), TileType::MountainBorderRight);
+        }
         levels.push(level);
 
         levels
@@ -548,10 +998,16 @@ pub struct Level {
 
     pub is_setup: bool,
     pub tile_layout: HashMap<IVec2, TileType>,
+    pub default_train_start: IVec2, // Grid tile position where train starts by default
 }
 
 impl Level {
-    pub fn new(name: &'static str, grid_tiles: IVec2, pos_world: f32::Vec2) -> Self {
+    pub fn new(
+        name: &'static str,
+        grid_tiles: IVec2,
+        pos_world: f32::Vec2,
+        default_train_start: IVec2,
+    ) -> Self {
         let is_setup = false;
         let tile_layout = HashMap::new();
 
@@ -562,6 +1018,7 @@ impl Level {
 
             is_setup,
             tile_layout,
+            default_train_start,
         }
     }
 

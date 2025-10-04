@@ -4,7 +4,7 @@ mod styles;
 mod text;
 
 use constants::*;
-use game_state::{GameState, TileType};
+use game_state::{GameState, TileType, TrainDirection};
 use macroquad::{
     audio::{play_sound, play_sound_once, stop_sound, PlaySoundParams},
     prelude::*,
@@ -38,6 +38,7 @@ async fn main() {
         render_placed_tiles(&game_state);
         render_tile_highlight(&game_state);
         render_selected_tile_preview(&game_state);
+        render_train(&game_state);
 
         // UI
         set_default_camera();
@@ -85,6 +86,26 @@ fn update_current_level(game_state: &mut GameState) {
             new_level.pos_world.x + SCREEN_W / 2.0,
             new_level.pos_world.y + SCREEN_H / 2.0,
         );
+
+        // Update train position to new level's default start
+        game_state.train_tile_pos = new_level.default_train_start;
+
+        // Update train direction based on entry point
+        let w = new_level.grid_tiles.x;
+        let h = new_level.grid_tiles.y;
+        let start = new_level.default_train_start;
+
+        game_state.train_direction = if start.x == w - 1 {
+            TrainDirection::Left // At right edge, facing left
+        } else if start.x == 0 {
+            TrainDirection::Right // At left edge, facing right
+        } else if start.y == 0 {
+            TrainDirection::Down // At top edge, facing down
+        } else if start.y == h - 1 {
+            TrainDirection::Up // At bottom edge, facing up
+        } else {
+            TrainDirection::Right // Default
+        };
     }
 }
 
@@ -431,6 +452,36 @@ fn render_placed_tiles(game_state: &GameState) {
                 }
             }
         }
+    }
+}
+
+fn render_train(game_state: &GameState) {
+    // Calculate train world position from current level + train_tile_pos
+    if let Some(level) = game_state.current_level() {
+        let grid_offset = level.grid_offset();
+        let grid_origin = level.pos_world + grid_offset;
+
+        let train_world_x = grid_origin.x + (game_state.train_tile_pos.x as f32 * TILE_SIZE_X);
+        let train_world_y = grid_origin.y + (game_state.train_tile_pos.y as f32 * TILE_SIZE_Y);
+
+        // Select texture based on direction
+        let texture = match game_state.train_direction {
+            TrainDirection::Left => &game_state.texture_train_l_001,
+            TrainDirection::Right => &game_state.texture_train_r_001,
+            TrainDirection::Up => &game_state.texture_train_l_001, // Placeholder until up sprite exists
+            TrainDirection::Down => &game_state.texture_train_l_001, // Placeholder until down sprite exists
+        };
+
+        draw_texture_ex(
+            texture,
+            train_world_x,
+            train_world_y,
+            WHITE,
+            DrawTextureParams {
+                flip_y: true,
+                ..Default::default()
+            },
+        );
     }
 }
 
