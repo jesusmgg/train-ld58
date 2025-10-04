@@ -430,20 +430,20 @@ impl GameState {
         let mut level = Level::new("1-1", grid_size, f32::vec2(0.0, 0.0), IVec2::new(w, h / 3));
         level
             .tile_layout
-            .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerUL);
+            .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerDR);
         level
             .tile_layout
-            .insert(IVec2::new(w, -1), TileType::MountainBorderCornerUR);
+            .insert(IVec2::new(w, -1), TileType::MountainBorderCornerDL);
         level
             .tile_layout
-            .insert(IVec2::new(-1, h), TileType::MountainBorderCornerDL);
+            .insert(IVec2::new(-1, h), TileType::MountainBorderCornerUR);
         level
             .tile_layout
-            .insert(IVec2::new(w, h), TileType::MountainBorderCornerDR);
+            .insert(IVec2::new(w, h), TileType::MountainBorderCornerUL);
         for x in 0..w {
             level
                 .tile_layout
-                .insert(IVec2::new(x, -1), TileType::MountainBorderUp);
+                .insert(IVec2::new(x, -1), TileType::MountainBorderDown);
         }
         for x in 0..w {
             if x == w / 3 {
@@ -457,7 +457,7 @@ impl GameState {
             } else {
                 level
                     .tile_layout
-                    .insert(IVec2::new(x, h), TileType::MountainBorderDown);
+                    .insert(IVec2::new(x, h), TileType::MountainBorderUp);
             }
         }
         for y in 0..h {
@@ -505,7 +505,7 @@ impl GameState {
         for x in 0..w {
             level
                 .tile_layout
-                .insert(IVec2::new(x, -1), TileType::MountainBorderUp);
+                .insert(IVec2::new(x, -1), TileType::MountainBorderDown);
         }
         for x in 0..w {
             if x == w / 3 {
@@ -519,7 +519,7 @@ impl GameState {
             } else {
                 level
                     .tile_layout
-                    .insert(IVec2::new(x, h), TileType::MountainBorderDown);
+                    .insert(IVec2::new(x, h), TileType::MountainBorderUp);
             }
         }
         for y in 0..h {
@@ -577,7 +577,7 @@ impl GameState {
         for x in 0..w {
             level
                 .tile_layout
-                .insert(IVec2::new(x, -1), TileType::MountainBorderUp);
+                .insert(IVec2::new(x, -1), TileType::MountainBorderDown);
         }
         for x in 0..w {
             if x == w / 3 {
@@ -591,7 +591,7 @@ impl GameState {
             } else {
                 level
                     .tile_layout
-                    .insert(IVec2::new(x, h), TileType::MountainBorderDown);
+                    .insert(IVec2::new(x, h), TileType::MountainBorderUp);
             }
         }
         for y in 0..h {
@@ -648,7 +648,7 @@ impl GameState {
             } else {
                 level
                     .tile_layout
-                    .insert(IVec2::new(x, -1), TileType::MountainBorderUp);
+                    .insert(IVec2::new(x, -1), TileType::MountainBorderDown);
             }
         }
         for x in 0..w {
@@ -663,7 +663,7 @@ impl GameState {
             } else {
                 level
                     .tile_layout
-                    .insert(IVec2::new(x, h), TileType::MountainBorderDown);
+                    .insert(IVec2::new(x, h), TileType::MountainBorderUp);
             }
         }
         for y in 0..h {
@@ -720,7 +720,7 @@ impl GameState {
             } else {
                 level
                     .tile_layout
-                    .insert(IVec2::new(x, -1), TileType::MountainBorderUp);
+                    .insert(IVec2::new(x, -1), TileType::MountainBorderDown);
             }
         }
         for x in 0..w {
@@ -735,7 +735,7 @@ impl GameState {
             } else {
                 level
                     .tile_layout
-                    .insert(IVec2::new(x, h), TileType::MountainBorderDown);
+                    .insert(IVec2::new(x, h), TileType::MountainBorderUp);
             }
         }
         for y in 0..h {
@@ -802,7 +802,7 @@ impl GameState {
             } else {
                 level
                     .tile_layout
-                    .insert(IVec2::new(x, -1), TileType::MountainBorderUp);
+                    .insert(IVec2::new(x, -1), TileType::MountainBorderDown);
             }
         }
         for x in 0..w {
@@ -817,7 +817,7 @@ impl GameState {
             } else {
                 level
                     .tile_layout
-                    .insert(IVec2::new(x, h), TileType::MountainBorderDown);
+                    .insert(IVec2::new(x, h), TileType::MountainBorderUp);
             }
         }
         for y in 0..h {
@@ -874,13 +874,13 @@ impl GameState {
             } else {
                 level
                     .tile_layout
-                    .insert(IVec2::new(x, -1), TileType::MountainBorderUp);
+                    .insert(IVec2::new(x, -1), TileType::MountainBorderDown);
             }
         }
         for x in 0..w {
             level
                 .tile_layout
-                .insert(IVec2::new(x, h), TileType::MountainBorderDown);
+                .insert(IVec2::new(x, h), TileType::MountainBorderUp);
         }
         for y in 0..h {
             level
@@ -936,13 +936,13 @@ impl GameState {
             } else {
                 level
                     .tile_layout
-                    .insert(IVec2::new(x, -1), TileType::MountainBorderUp);
+                    .insert(IVec2::new(x, -1), TileType::MountainBorderDown);
             }
         }
         for x in 0..w {
             level
                 .tile_layout
-                .insert(IVec2::new(x, h), TileType::MountainBorderDown);
+                .insert(IVec2::new(x, h), TileType::MountainBorderUp);
         }
         for y in 0..h {
             if y == h / 3 {
@@ -1008,13 +1008,13 @@ impl GameState {
             } else {
                 level
                     .tile_layout
-                    .insert(IVec2::new(x, -1), TileType::MountainBorderUp);
+                    .insert(IVec2::new(x, -1), TileType::MountainBorderDown);
             }
         }
         for x in 0..w {
             level
                 .tile_layout
-                .insert(IVec2::new(x, h), TileType::MountainBorderDown);
+                .insert(IVec2::new(x, h), TileType::MountainBorderUp);
         }
         for y in 0..h {
             if y == h / 3 {
