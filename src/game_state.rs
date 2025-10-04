@@ -209,30 +209,38 @@ impl GameState {
             .unwrap();
 
         // Tunnel holes
-        let texture_mountain_tunnel_hole_open_u = load_texture("assets/sprites/mountain_tunnel_hole_open_u.png")
-            .await
-            .unwrap();
-        let texture_mountain_tunnel_hole_open_d = load_texture("assets/sprites/mountain_tunnel_hole_open_d.png")
-            .await
-            .unwrap();
-        let texture_mountain_tunnel_hole_open_l = load_texture("assets/sprites/mountain_tunnel_hole_open_l.png")
-            .await
-            .unwrap();
-        let texture_mountain_tunnel_hole_open_r = load_texture("assets/sprites/mountain_tunnel_hole_open_r.png")
-            .await
-            .unwrap();
-        let texture_mountain_tunnel_hole_closed_u = load_texture("assets/sprites/mountain_tunnel_hole_closed_u.png")
-            .await
-            .unwrap();
-        let texture_mountain_tunnel_hole_closed_d = load_texture("assets/sprites/mountain_tunnel_hole_closed_d.png")
-            .await
-            .unwrap();
-        let texture_mountain_tunnel_hole_closed_l = load_texture("assets/sprites/mountain_tunnel_hole_closed_l.png")
-            .await
-            .unwrap();
-        let texture_mountain_tunnel_hole_closed_r = load_texture("assets/sprites/mountain_tunnel_hole_closed_r.png")
-            .await
-            .unwrap();
+        let texture_mountain_tunnel_hole_open_u =
+            load_texture("assets/sprites/mountain_tunnel_hole_open_u.png")
+                .await
+                .unwrap();
+        let texture_mountain_tunnel_hole_open_d =
+            load_texture("assets/sprites/mountain_tunnel_hole_open_d.png")
+                .await
+                .unwrap();
+        let texture_mountain_tunnel_hole_open_l =
+            load_texture("assets/sprites/mountain_tunnel_hole_open_l.png")
+                .await
+                .unwrap();
+        let texture_mountain_tunnel_hole_open_r =
+            load_texture("assets/sprites/mountain_tunnel_hole_open_r.png")
+                .await
+                .unwrap();
+        let texture_mountain_tunnel_hole_closed_u =
+            load_texture("assets/sprites/mountain_tunnel_hole_closed_u.png")
+                .await
+                .unwrap();
+        let texture_mountain_tunnel_hole_closed_d =
+            load_texture("assets/sprites/mountain_tunnel_hole_closed_d.png")
+                .await
+                .unwrap();
+        let texture_mountain_tunnel_hole_closed_l =
+            load_texture("assets/sprites/mountain_tunnel_hole_closed_l.png")
+                .await
+                .unwrap();
+        let texture_mountain_tunnel_hole_closed_r =
+            load_texture("assets/sprites/mountain_tunnel_hole_closed_r.png")
+                .await
+                .unwrap();
 
         let texture_train_l_001 = load_texture("assets/sprites/train_front_l_001.png")
             .await

@@ -1,5 +1,7 @@
 ## Graphics pending:
-- Train.
+- Train up.
+- Train down.
+- Train animation.
 - Mountains corners.
 - Roads.
 - Houses.
