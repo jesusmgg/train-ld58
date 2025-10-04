@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use macroquad::{
     audio::{load_sound, Sound},
     camera::{set_camera, Camera2D},
@@ -9,6 +11,31 @@ use macroquad::{
 
 use crate::constants::*;
 use crate::{styles::Styles, text::draw_scaled_text};
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TileType {
+    // Track pieces
+    TrackHorizontal,
+    TrackVertical,
+    TrackCornerUL,
+    TrackCornerUR,
+    TrackCornerDL,
+    TrackCornerDR,
+
+    // Obstacles
+    Rock,
+    Water,
+
+    // Garbage system
+    GarbagePickup,
+    GarbageDropoff,
+
+    // Level connections (direction indicates which adjacent level it connects to)
+    ConnectionNorth, // Connects to level above
+    ConnectionSouth, // Connects to level below
+    ConnectionEast,  // Connects to level to the right
+    ConnectionWest,  // Connects to level to the left
+}
 
 pub struct GameState {
     pub styles: Styles,
@@ -23,7 +50,16 @@ pub struct GameState {
     pub levels: Vec<Level>,
     pub level_active: Option<usize>,
 
+    pub selected_tile: Option<TileType>,
+
     pub texture_background_01: Texture2D,
+    pub texture_track_h: Texture2D,
+    pub texture_track_v: Texture2D,
+    pub texture_track_corner_ul: Texture2D,
+    pub texture_track_corner_ur: Texture2D,
+    pub texture_track_corner_dl: Texture2D,
+    pub texture_track_corner_dr: Texture2D,
+    pub texture_placeholder: Texture2D,
 }
 
 impl GameState {
@@ -43,7 +79,26 @@ impl GameState {
         let level_active = Some(0);
         // let level_active = Some(levels.len() - 1);
 
-        let texture_background_01 = load_texture("assets/background.png").await.unwrap();
+        let selected_tile = None;
+
+        let texture_background_01 = load_texture("assets/sprites/background.png").await.unwrap();
+        let texture_track_h = load_texture("assets/sprites/track_h.png").await.unwrap();
+        let texture_track_v = load_texture("assets/sprites/track_v.png").await.unwrap();
+        let texture_track_corner_ul = load_texture("assets/sprites/track_corner_ul.png")
+            .await
+            .unwrap();
+        let texture_track_corner_ur = load_texture("assets/sprites/track_corner_ur.png")
+            .await
+            .unwrap();
+        let texture_track_corner_dl = load_texture("assets/sprites/track_corner_dl.png")
+            .await
+            .unwrap();
+        let texture_track_corner_dr = load_texture("assets/sprites/track_corner_dr.png")
+            .await
+            .unwrap();
+        let texture_placeholder = load_texture("assets/sprites/placeholder.png")
+            .await
+            .unwrap();
 
         let sfx_hover_01 = load_sound("assets/sfx/hover_02.ogg").await.unwrap();
         let sfx_explosion_01 = load_sound("assets/sfx/explosion_01.ogg").await.unwrap();
@@ -62,7 +117,16 @@ impl GameState {
             level_active,
             levels,
 
+            selected_tile,
+
             texture_background_01,
+            texture_track_h,
+            texture_track_v,
+            texture_track_corner_ul,
+            texture_track_corner_ur,
+            texture_track_corner_dl,
+            texture_track_corner_dr,
+            texture_placeholder,
         }
     }
 
@@ -77,6 +141,18 @@ impl GameState {
         match self.level_active {
             None => return None,
             Some(i) => return Some(&self.levels[i]),
+        }
+    }
+
+    pub fn get_texture_for_tile(&self, tile_type: TileType) -> &Texture2D {
+        match tile_type {
+            TileType::TrackHorizontal => &self.texture_track_h,
+            TileType::TrackVertical => &self.texture_track_v,
+            TileType::TrackCornerUL => &self.texture_track_corner_ul,
+            TileType::TrackCornerUR => &self.texture_track_corner_ur,
+            TileType::TrackCornerDL => &self.texture_track_corner_dl,
+            TileType::TrackCornerDR => &self.texture_track_corner_dr,
+            _ => &self.texture_placeholder,
         }
     }
 
@@ -117,27 +193,15 @@ impl GameState {
 
         levels.push(Level::new("1-1", grid_size, f32::vec2(0.0, 0.0)));
         levels.push(Level::new("1-2", grid_size, f32::vec2(SCREEN_W, 0.0)));
-        levels.push(Level::new(
-            "1-3",
-            grid_size,
-            f32::vec2(SCREEN_W * 2.0, 0.0),
-        ));
+        levels.push(Level::new("1-3", grid_size, f32::vec2(SCREEN_W * 2.0, 0.0)));
         levels.push(Level::new("2-1", grid_size, f32::vec2(0.0, SCREEN_H)));
-        levels.push(Level::new(
-            "2-2",
-            grid_size,
-            f32::vec2(SCREEN_W, SCREEN_H),
-        ));
+        levels.push(Level::new("2-2", grid_size, f32::vec2(SCREEN_W, SCREEN_H)));
         levels.push(Level::new(
             "2-3",
             grid_size,
             f32::vec2(SCREEN_W * 2.0, SCREEN_H),
         ));
-        levels.push(Level::new(
-            "3-1",
-            grid_size,
-            f32::vec2(0.0, SCREEN_H * 2.0),
-        ));
+        levels.push(Level::new("3-1", grid_size, f32::vec2(0.0, SCREEN_H * 2.0)));
         levels.push(Level::new(
             "3-2",
             grid_size,
@@ -186,11 +250,13 @@ pub struct Level {
     pub pos_world: f32::Vec2,
 
     pub is_setup: bool,
+    pub tile_layout: HashMap<IVec2, TileType>,
 }
 
 impl Level {
     pub fn new(name: &'static str, grid_tiles: IVec2, pos_world: f32::Vec2) -> Self {
         let is_setup = false;
+        let tile_layout = HashMap::new();
 
         Self {
             name,
@@ -198,6 +264,7 @@ impl Level {
             pos_world,
 
             is_setup,
+            tile_layout,
         }
     }
 

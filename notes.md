@@ -1,3 +1,15 @@
+## Graphics pending:
+- Train.
+- Track sections.
+- Tunnels.
+- Mountains.
+- Roads.
+- Houses.
+- Dumpsters.
+- Recycling plant.
+- Rocks.
+- Water.
+
 ## Pending
 - Track layout.
 - Track layout UI.
