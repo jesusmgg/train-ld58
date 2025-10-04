@@ -1,6 +1,4 @@
 ## Pending
-- Scrolling camera.
-- 3x3 level grid.
 - In-level grid.
 - Track layout.
 - Track layout UI.
@@ -9,5 +7,6 @@
 
 ## Bugs
 - Loading screen is not showing.
+- Tile highlight should only be active when the level is fully in camera view.
 
 ## Future improvements

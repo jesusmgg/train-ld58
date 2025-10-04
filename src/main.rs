@@ -30,8 +30,9 @@ async fn main() {
 
         // Render
         set_camera(&game_state.camera);
-        // render_grid(&game_state);
         render_background(&game_state);
+        render_grid(&game_state);
+        render_tile_highlight(&game_state);
 
         // UI
         set_default_camera();
@@ -115,6 +116,84 @@ fn render_background(game_state: &GameState) {
     }
 }
 
+/// Renders grid for current and surrounding levels
+fn render_grid(game_state: &GameState) {
+    // Subtle checkboard colors with low alpha
+    let mut color1 = game_state.styles.colors.green_1;
+    color1.a = 0.1;
+    let mut color2 = game_state.styles.colors.green_2;
+    color2.a = 0.1;
+
+    // Get current level's grid position
+    if let Some(active_idx) = game_state.level_active {
+        let grid_x = active_idx % 3;
+        let grid_y = active_idx / 3;
+
+        // Draw 3x3 block centered on current level
+        for dy in -1..=1 {
+            for dx in -1..=1 {
+                let nx = grid_x as i32 + dx;
+                let ny = grid_y as i32 + dy;
+
+                if nx >= 0 && nx < 3 && ny >= 0 && ny < 3 {
+                    let neighbor_idx = (ny * 3 + nx) as usize;
+                    let level = &game_state.levels[neighbor_idx];
+
+                    // Calculate grid position (centered in level)
+                    let grid_offset = level.grid_offset();
+                    let grid_origin = level.pos_world + grid_offset;
+
+                    // Draw checkboard pattern
+                    for ty in 0..level.grid_tiles.y {
+                        for tx in 0..level.grid_tiles.x {
+                            let x = grid_origin.x + (tx as f32 * TILE_SIZE_X);
+                            let y = grid_origin.y + (ty as f32 * TILE_SIZE_Y);
+
+                            // Alternate colors for checkboard
+                            let color = if (tx + ty) % 2 == 0 { color1 } else { color2 };
+
+                            draw_rectangle(x, y, TILE_SIZE_X, TILE_SIZE_Y, color);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn render_tile_highlight(game_state: &GameState) {
+    let mouse_pos = &game_state.mouse_pos;
+
+    // Highlight color
+    let mut highlight_color = game_state.styles.colors.yellow_1;
+    highlight_color.a = 0.4;
+
+    // Check only current level
+    if let Some(level) = game_state.current_level() {
+        // Calculate grid position (centered in level)
+        let grid_offset = level.grid_offset();
+        let grid_origin = level.pos_world + grid_offset;
+        let grid_size = level.grid_size_px();
+
+        // Check if mouse is within this level's grid
+        if mouse_pos.x >= grid_origin.x
+            && mouse_pos.x < grid_origin.x + grid_size.x
+            && mouse_pos.y >= grid_origin.y
+            && mouse_pos.y < grid_origin.y + grid_size.y
+        {
+            // Calculate tile coordinates
+            let tile_x = ((mouse_pos.x - grid_origin.x) / TILE_SIZE_X) as i32;
+            let tile_y = ((mouse_pos.y - grid_origin.y) / TILE_SIZE_Y) as i32;
+
+            // Draw highlight
+            let x = grid_origin.x + (tile_x as f32 * TILE_SIZE_X);
+            let y = grid_origin.y + (tile_y as f32 * TILE_SIZE_Y);
+
+            draw_rectangle(x, y, TILE_SIZE_X, TILE_SIZE_Y, highlight_color);
+        }
+    }
+}
+
 fn render_diagnostics(game_state: &GameState) {
     let font_size = 32.0;
     let color = Color::from_hex(0x151515);
@@ -186,7 +265,10 @@ fn update_camera(game_state: &mut GameState) {
         let t = CAMERA_TRANSITION_SPEED;
         let eased_t = t * t * (3.0 - 2.0 * t);
 
-        game_state.camera.target = game_state.camera.target.lerp(game_state.camera_target_pos, eased_t);
+        game_state.camera.target = game_state
+            .camera
+            .target
+            .lerp(game_state.camera_target_pos, eased_t);
     } else {
         // Snap to target when close enough
         game_state.camera.target = game_state.camera_target_pos;

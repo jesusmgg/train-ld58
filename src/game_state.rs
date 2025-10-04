@@ -110,37 +110,39 @@ impl GameState {
         let mut levels = Vec::with_capacity(9);
 
         // 3x3 grid of levels, each at full screen size intervals
-        levels.push(Level::new("1-1", IVec2::ZERO, f32::vec2(0.0, 0.0)));
-        levels.push(Level::new("1-2", IVec2::ZERO, f32::vec2(SCREEN_W, 0.0)));
+        let grid_size = IVec2::new(16, 10);
+
+        levels.push(Level::new("1-1", grid_size, f32::vec2(0.0, 0.0)));
+        levels.push(Level::new("1-2", grid_size, f32::vec2(SCREEN_W, 0.0)));
         levels.push(Level::new(
             "1-3",
-            IVec2::ZERO,
+            grid_size,
             f32::vec2(SCREEN_W * 2.0, 0.0),
         ));
-        levels.push(Level::new("2-1", IVec2::ZERO, f32::vec2(0.0, SCREEN_H)));
+        levels.push(Level::new("2-1", grid_size, f32::vec2(0.0, SCREEN_H)));
         levels.push(Level::new(
             "2-2",
-            IVec2::ZERO,
+            grid_size,
             f32::vec2(SCREEN_W, SCREEN_H),
         ));
         levels.push(Level::new(
             "2-3",
-            IVec2::ZERO,
+            grid_size,
             f32::vec2(SCREEN_W * 2.0, SCREEN_H),
         ));
         levels.push(Level::new(
             "3-1",
-            IVec2::ZERO,
+            grid_size,
             f32::vec2(0.0, SCREEN_H * 2.0),
         ));
         levels.push(Level::new(
             "3-2",
-            IVec2::ZERO,
+            grid_size,
             f32::vec2(SCREEN_W, SCREEN_H * 2.0),
         ));
         levels.push(Level::new(
             "3-3",
-            IVec2::ZERO,
+            grid_size,
             f32::vec2(SCREEN_W * 2.0, SCREEN_H * 2.0),
         ));
 
