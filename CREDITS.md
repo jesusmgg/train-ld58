@@ -5,10 +5,6 @@ Developed by Jesus Gonzalez in 48 hours for the [Ludum Dare 58](https://ldjam.co
 
 ## Tools used
 ### Audio
-- https://widseysoft.itch.io/sounddevx
-- https://humnom.net/apps/boscaceoil/
-- https://www.audacityteam.org/
-- https://www.ffmpeg.org/
 
 ### Code
 - https://github.com/helix-editor/helix
