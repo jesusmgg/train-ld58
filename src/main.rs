@@ -4,7 +4,7 @@ mod styles;
 mod text;
 
 use constants::*;
-use game_state::{GameState, TileType, TrainDirection};
+use game_state::{GameState, TileType, TrainDirection, TrainState};
 use macroquad::{
     audio::{play_sound, play_sound_once, stop_sound, PlaySoundParams},
     math::Rect,
@@ -23,12 +23,14 @@ async fn main() {
         game_state.mouse_pos = game_state
             .camera
             .screen_to_world(f32::Vec2::from(mouse_position()));
+        update_train_input(&mut game_state);
 
         // Game logic update
         update_current_level(&mut game_state);
         update_tile_highlight(&mut game_state);
         update_tile_selection(&mut game_state);
         update_tile_placement(&mut game_state);
+        update_train_movement(&mut game_state);
         update_sim(&mut game_state);
         update_camera(&mut game_state);
 
@@ -53,6 +55,43 @@ async fn main() {
         update_win_condition(&mut game_state);
 
         next_frame().await
+    }
+}
+
+fn update_train_input(game_state: &mut GameState) {
+    // Space bar to start/stop train
+    if is_key_pressed(KeyCode::Space) {
+        game_state.train_state = match game_state.train_state {
+            TrainState::Stopped => TrainState::Running,
+            TrainState::Running => TrainState::Stopped,
+            TrainState::Obstacle => TrainState::Stopped,
+            TrainState::BrokenRoute => TrainState::Running,
+        };
+    }
+
+    // R to reset train to starting position
+    if is_key_pressed(KeyCode::R) {
+        if let Some(level) = game_state.current_level() {
+            // Copy values before modifying state
+            let w = level.grid_tiles.x;
+            let h = level.grid_tiles.y;
+            let start = level.default_train_start;
+
+            game_state.train_tile_pos = start;
+            game_state.train_pos_offset = f32::Vec2::ZERO;
+            game_state.train_direction = if start.x == -1 {
+                TrainDirection::Right
+            } else if start.x == w {
+                TrainDirection::Left
+            } else if start.y == -1 {
+                TrainDirection::Down
+            } else if start.y == h {
+                TrainDirection::Up
+            } else {
+                TrainDirection::Right
+            };
+            game_state.train_state = TrainState::Stopped;
+        }
     }
 }
 
@@ -288,22 +327,246 @@ fn render_diagnostics(game_state: &GameState) {
         font_size,
         &color,
     );
+    y += 24.0;
+    draw_scaled_text(
+        format!("Train state: {:?}", &game_state.train_state).as_str(),
+        x,
+        y,
+        font_size,
+        &color,
+    );
 }
 
-/// Returns `true` if level was setup this frame
-fn setup_level(game_state: &mut GameState) -> bool {
-    let level = match game_state.current_level_mut() {
-        None => return false,
-        Some(level) => level,
-    };
-
-    if level.is_setup {
-        return false;
+fn update_train_movement(game_state: &mut GameState) {
+    if game_state.train_state != TrainState::Running {
+        return;
     }
 
-    level.is_setup = true;
+    // Calculate movement delta based on direction and speed
+    let delta = get_frame_time() * TRAIN_SPEED;
 
-    true
+    let movement = match game_state.train_direction {
+        TrainDirection::Up => f32::Vec2::new(0.0, -delta),
+        TrainDirection::Down => f32::Vec2::new(0.0, delta),
+        TrainDirection::Left => f32::Vec2::new(-delta, 0.0),
+        TrainDirection::Right => f32::Vec2::new(delta, 0.0),
+    };
+
+    // Check if we're about to cross into next tile
+    let new_offset = game_state.train_pos_offset + movement;
+    let will_cross = match game_state.train_direction {
+        TrainDirection::Up => new_offset.y <= -1.0,
+        TrainDirection::Down => new_offset.y >= 1.0,
+        TrainDirection::Left => new_offset.x <= -1.0,
+        TrainDirection::Right => new_offset.x >= 1.0,
+    };
+
+    // If we're about to cross, validate the next tile FIRST
+    if will_cross {
+        let level = match game_state.current_level() {
+            Some(l) => l,
+            None => return,
+        };
+
+        let next_pos = match game_state.train_direction {
+            TrainDirection::Up => game_state.train_tile_pos + IVec2::new(0, -1),
+            TrainDirection::Down => game_state.train_tile_pos + IVec2::new(0, 1),
+            TrainDirection::Left => game_state.train_tile_pos + IVec2::new(-1, 0),
+            TrainDirection::Right => game_state.train_tile_pos + IVec2::new(1, 0),
+        };
+
+        // Check if next position is a tunnel (level connection)
+        let w = level.grid_tiles.x;
+        let h = level.grid_tiles.y;
+        let is_tunnel = next_pos.x < 0 || next_pos.x >= w || next_pos.y < 0 || next_pos.y >= h;
+
+        if is_tunnel {
+            // Check if there's actually a tunnel at this position
+            if let Some(tile) = level.tile_layout.get(&next_pos) {
+                if matches!(
+                    tile,
+                    TileType::TunnelUpOpen
+                        | TileType::TunnelDownOpen
+                        | TileType::TunnelLeftOpen
+                        | TileType::TunnelRightOpen
+                ) {
+                    // Valid tunnel - allow crossing and stop
+                    match game_state.train_direction {
+                        TrainDirection::Up => game_state.train_pos_offset.y += 1.0,
+                        TrainDirection::Down => game_state.train_pos_offset.y -= 1.0,
+                        TrainDirection::Left => game_state.train_pos_offset.x += 1.0,
+                        TrainDirection::Right => game_state.train_pos_offset.x -= 1.0,
+                    }
+                    game_state.train_tile_pos = next_pos;
+                    game_state.train_state = TrainState::Stopped;
+                    return;
+                }
+            }
+            // No tunnel or closed tunnel - broken route, clamp position and stop
+            match game_state.train_direction {
+                TrainDirection::Up => game_state.train_pos_offset.y = -0.9,
+                TrainDirection::Down => game_state.train_pos_offset.y = 0.9,
+                TrainDirection::Left => game_state.train_pos_offset.x = -0.9,
+                TrainDirection::Right => game_state.train_pos_offset.x = 0.9,
+            }
+            game_state.train_state = TrainState::BrokenRoute;
+            return;
+        }
+
+        // Check if next position has a valid track
+        if let Some(tile) = level.tile_layout.get(&next_pos) {
+            // Check if it's a track tile
+            let is_track = matches!(
+                tile,
+                TileType::TrackHorizontal
+                    | TileType::TrackVertical
+                    | TileType::TrackCornerUL
+                    | TileType::TrackCornerUR
+                    | TileType::TrackCornerDL
+                    | TileType::TrackCornerDR
+            );
+
+            if !is_track {
+                // Hit an obstacle - clamp position and stop
+                match game_state.train_direction {
+                    TrainDirection::Up => game_state.train_pos_offset.y = -0.9,
+                    TrainDirection::Down => game_state.train_pos_offset.y = 0.9,
+                    TrainDirection::Left => game_state.train_pos_offset.x = -0.9,
+                    TrainDirection::Right => game_state.train_pos_offset.x = 0.9,
+                }
+                game_state.train_state = TrainState::Obstacle;
+                return;
+            }
+
+            // Validate track connection and update direction
+            let valid_and_new_direction = match (game_state.train_direction, tile) {
+                // Horizontal track
+                (TrainDirection::Left, TileType::TrackHorizontal) => Some(TrainDirection::Left),
+                (TrainDirection::Right, TileType::TrackHorizontal) => Some(TrainDirection::Right),
+
+                // Vertical track
+                (TrainDirection::Up, TileType::TrackVertical) => Some(TrainDirection::Up),
+                (TrainDirection::Down, TileType::TrackVertical) => Some(TrainDirection::Down),
+
+                // Corner UL (connects down and right)
+                (TrainDirection::Up, TileType::TrackCornerUL) => Some(TrainDirection::Right),
+                (TrainDirection::Left, TileType::TrackCornerUL) => Some(TrainDirection::Down),
+
+                // Corner UR (connects down and left)
+                (TrainDirection::Up, TileType::TrackCornerUR) => Some(TrainDirection::Left),
+                (TrainDirection::Right, TileType::TrackCornerUR) => Some(TrainDirection::Down),
+
+                // Corner DL (connects up and right)
+                (TrainDirection::Down, TileType::TrackCornerDL) => Some(TrainDirection::Right),
+                (TrainDirection::Left, TileType::TrackCornerDL) => Some(TrainDirection::Up),
+
+                // Corner DR (connects up and left)
+                (TrainDirection::Down, TileType::TrackCornerDR) => Some(TrainDirection::Left),
+                (TrainDirection::Right, TileType::TrackCornerDR) => Some(TrainDirection::Up),
+
+                _ => None,
+            };
+
+            if let Some(new_direction) = valid_and_new_direction {
+                // Valid track - but check if there's a valid continuation after this tile
+                let next_next_pos = match new_direction {
+                    TrainDirection::Up => next_pos + IVec2::new(0, -1),
+                    TrainDirection::Down => next_pos + IVec2::new(0, 1),
+                    TrainDirection::Left => next_pos + IVec2::new(-1, 0),
+                    TrainDirection::Right => next_pos + IVec2::new(1, 0),
+                };
+
+                // Check if the tile after next is a tunnel or valid track
+                let is_next_tunnel = next_next_pos.x < 0
+                    || next_next_pos.x >= w
+                    || next_next_pos.y < 0
+                    || next_next_pos.y >= h;
+                let has_valid_continuation = if is_next_tunnel {
+                    // Check if there's an open tunnel
+                    if let Some(tile) = level.tile_layout.get(&next_next_pos) {
+                        matches!(
+                            tile,
+                            TileType::TunnelUpOpen
+                                | TileType::TunnelDownOpen
+                                | TileType::TunnelLeftOpen
+                                | TileType::TunnelRightOpen
+                        )
+                    } else {
+                        false
+                    }
+                } else {
+                    // Check if there's a valid track tile
+                    if let Some(tile) = level.tile_layout.get(&next_next_pos) {
+                        matches!(
+                            tile,
+                            TileType::TrackHorizontal
+                                | TileType::TrackVertical
+                                | TileType::TrackCornerUL
+                                | TileType::TrackCornerUR
+                                | TileType::TrackCornerDL
+                                | TileType::TrackCornerDR
+                        )
+                    } else {
+                        false
+                    }
+                };
+
+                if has_valid_continuation {
+                    // Valid continuation exists - allow crossing
+                    game_state.train_pos_offset = match game_state.train_direction {
+                        TrainDirection::Up => {
+                            game_state.train_pos_offset.y += 1.0;
+                            game_state.train_pos_offset
+                        }
+                        TrainDirection::Down => {
+                            game_state.train_pos_offset.y -= 1.0;
+                            game_state.train_pos_offset
+                        }
+                        TrainDirection::Left => {
+                            game_state.train_pos_offset.x += 1.0;
+                            game_state.train_pos_offset
+                        }
+                        TrainDirection::Right => {
+                            game_state.train_pos_offset.x -= 1.0;
+                            game_state.train_pos_offset
+                        }
+                    };
+                    game_state.train_tile_pos = next_pos;
+                    game_state.train_direction = new_direction;
+                } else {
+                    // No valid continuation - don't enter this tile
+                    match game_state.train_direction {
+                        TrainDirection::Up => game_state.train_pos_offset.y = -0.9,
+                        TrainDirection::Down => game_state.train_pos_offset.y = 0.9,
+                        TrainDirection::Left => game_state.train_pos_offset.x = -0.9,
+                        TrainDirection::Right => game_state.train_pos_offset.x = 0.9,
+                    }
+                    game_state.train_state = TrainState::BrokenRoute;
+                }
+            } else {
+                // Invalid track connection - clamp position and stop
+                match game_state.train_direction {
+                    TrainDirection::Up => game_state.train_pos_offset.y = -0.9,
+                    TrainDirection::Down => game_state.train_pos_offset.y = 0.9,
+                    TrainDirection::Left => game_state.train_pos_offset.x = -0.9,
+                    TrainDirection::Right => game_state.train_pos_offset.x = 0.9,
+                }
+                game_state.train_state = TrainState::BrokenRoute;
+            }
+        } else {
+            // No tile at next position - clamp position and stop
+            match game_state.train_direction {
+                TrainDirection::Up => game_state.train_pos_offset.y = -0.9,
+                TrainDirection::Down => game_state.train_pos_offset.y = 0.9,
+                TrainDirection::Left => game_state.train_pos_offset.x = -0.9,
+                TrainDirection::Right => game_state.train_pos_offset.x = 0.9,
+            }
+            game_state.train_state = TrainState::BrokenRoute;
+        }
+    } else {
+        // Not crossing yet, just update offset
+        game_state.train_pos_offset = new_offset;
+    }
 }
 
 fn update_sim(game_state: &mut GameState) {}
@@ -748,13 +1011,18 @@ fn render_tunnel_frames(game_state: &GameState) {
 }
 
 fn render_train(game_state: &GameState) {
-    // Calculate train world position from current level + train_tile_pos
+    // Calculate train world position from current level + train_tile_pos + offset
     if let Some(level) = game_state.current_level() {
         let grid_offset = level.grid_offset();
         let grid_origin = level.pos_world + grid_offset;
 
-        let train_world_x = grid_origin.x + (game_state.train_tile_pos.x as f32 * TILE_SIZE_X);
-        let train_world_y = grid_origin.y + (game_state.train_tile_pos.y as f32 * TILE_SIZE_Y);
+        // Base tile position
+        let base_x = grid_origin.x + (game_state.train_tile_pos.x as f32 * TILE_SIZE_X);
+        let base_y = grid_origin.y + (game_state.train_tile_pos.y as f32 * TILE_SIZE_Y);
+
+        // Add smooth offset
+        let train_world_x = base_x + (game_state.train_pos_offset.x * TILE_SIZE_X);
+        let train_world_y = base_y + (game_state.train_pos_offset.y * TILE_SIZE_Y);
 
         // Select texture based on direction
         let texture = match game_state.train_direction {

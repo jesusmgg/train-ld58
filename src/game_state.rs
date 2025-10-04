@@ -21,6 +21,14 @@ pub enum TrainDirection {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TrainState {
+    Stopped,
+    Running,
+    Obstacle,
+    BrokenRoute,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TileType {
     // Track pieces
     TrackHorizontal,
@@ -112,8 +120,10 @@ pub struct GameState {
     // Train
     pub texture_train_l_001: Texture2D,
     pub texture_train_r_001: Texture2D,
-    pub train_tile_pos: IVec2, // Grid position within current level
+    pub train_tile_pos: IVec2, // Logical grid position within current level
+    pub train_pos_offset: f32::Vec2, // Smooth position offset from tile position (0.0 to 1.0)
     pub train_direction: TrainDirection,
+    pub train_state: TrainState,
 }
 
 impl GameState {
@@ -154,6 +164,8 @@ impl GameState {
                 TrainDirection::Right // Default
             }
         };
+        let train_pos_offset = f32::Vec2::ZERO;
+        let train_state = TrainState::Stopped;
 
         let texture_background_01 = load_texture("assets/sprites/background.png").await.unwrap();
         let texture_track_h = load_texture("assets/sprites/track_h.png").await.unwrap();
@@ -303,7 +315,9 @@ impl GameState {
             texture_train_l_001,
             texture_train_r_001,
             train_tile_pos,
+            train_pos_offset,
             train_direction,
+            train_state,
         }
     }
 
