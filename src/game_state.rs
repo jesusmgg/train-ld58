@@ -189,7 +189,7 @@ impl GameState {
         let mut levels = Vec::with_capacity(9);
 
         // 3x3 grid of levels, each at full screen size intervals
-        let grid_size = IVec2::new(16, 10);
+        let grid_size = IVec2::new(12, 6);
 
         levels.push(Level::new("1-1", grid_size, f32::vec2(0.0, 0.0)));
         levels.push(Level::new("1-2", grid_size, f32::vec2(SCREEN_W, 0.0)));

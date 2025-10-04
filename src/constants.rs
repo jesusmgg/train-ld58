@@ -1,4 +1,4 @@
-pub const TILE_SIZE_PX: f32 = 24.0;
+pub const TILE_SIZE_PX: f32 = 32.0;
 
 pub const TILE_SIZE_X: f32 = TILE_SIZE_PX;
 pub const TILE_SIZE_Y: f32 = TILE_SIZE_PX;
