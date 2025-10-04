@@ -200,6 +200,15 @@ fn render_diagnostics(game_state: &GameState) {
     let x = 16.0;
     let mut y = 32.0;
 
+    draw_scaled_text(
+        format!("FPS: {}", get_fps()).as_str(),
+        x,
+        y,
+        font_size,
+        &color,
+    );
+    y += 24.0;
+
     let current_level_name = match &game_state.current_level() {
         Some(level) => level.name,
         None => "-",
