@@ -25,6 +25,7 @@ async fn main() {
 
         // Game logic update
         update_current_level(&mut game_state);
+        update_tile_highlight(&mut game_state);
         update_sim(&mut game_state);
         update_camera(&mut game_state);
 
@@ -161,12 +162,10 @@ fn render_grid(game_state: &GameState) {
     }
 }
 
-fn render_tile_highlight(game_state: &GameState) {
-    let mouse_pos = &game_state.mouse_pos;
+fn update_tile_highlight(game_state: &mut GameState) {
+    game_state.tile_highlighted_prev = game_state.tile_highlighted;
 
-    // Highlight color
-    let mut highlight_color = game_state.styles.colors.yellow_1;
-    highlight_color.a = 0.4;
+    let mouse_pos = &game_state.mouse_pos;
 
     // Check only current level
     if let Some(level) = game_state.current_level() {
@@ -185,9 +184,27 @@ fn render_tile_highlight(game_state: &GameState) {
             let tile_x = ((mouse_pos.x - grid_origin.x) / TILE_SIZE_X) as i32;
             let tile_y = ((mouse_pos.y - grid_origin.y) / TILE_SIZE_Y) as i32;
 
-            // Draw highlight
-            let x = grid_origin.x + (tile_x as f32 * TILE_SIZE_X);
-            let y = grid_origin.y + (tile_y as f32 * TILE_SIZE_Y);
+            game_state.tile_highlighted = Some(IVec2::new(tile_x, tile_y));
+        } else {
+            game_state.tile_highlighted = None;
+        }
+    } else {
+        game_state.tile_highlighted = None;
+    }
+}
+
+fn render_tile_highlight(game_state: &GameState) {
+    if let Some(tile) = game_state.tile_highlighted {
+        if let Some(level) = game_state.current_level() {
+            // Highlight color
+            let mut highlight_color = game_state.styles.colors.yellow_1;
+            highlight_color.a = 0.4;
+
+            let grid_offset = level.grid_offset();
+            let grid_origin = level.pos_world + grid_offset;
+
+            let x = grid_origin.x + (tile.x as f32 * TILE_SIZE_X);
+            let y = grid_origin.y + (tile.y as f32 * TILE_SIZE_Y);
 
             draw_rectangle(x, y, TILE_SIZE_X, TILE_SIZE_Y, highlight_color);
         }

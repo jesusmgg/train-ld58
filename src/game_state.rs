@@ -17,6 +17,8 @@ pub struct GameState {
     pub camera_target_pos: f32::Vec2,
 
     pub mouse_pos: f32::Vec2,
+    pub tile_highlighted: Option<IVec2>,
+    pub tile_highlighted_prev: Option<IVec2>,
 
     pub levels: Vec<Level>,
     pub level_active: Option<usize>,
@@ -34,9 +36,8 @@ impl GameState {
         let camera_target_pos = camera.target;
 
         let mouse_pos = f32::Vec2::ZERO;
-        let is_mouse_in_grid = false;
-        let tile_highlighted_prev = IVec2::splat(-1);
-        let tile_highlighted = IVec2::ZERO;
+        let tile_highlighted = None;
+        let tile_highlighted_prev = None;
 
         let levels = GameState::create_levels();
         let level_active = Some(0);
@@ -55,6 +56,8 @@ impl GameState {
             camera_target_pos,
 
             mouse_pos,
+            tile_highlighted,
+            tile_highlighted_prev,
 
             level_active,
             levels,
