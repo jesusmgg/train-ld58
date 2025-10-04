@@ -1,9 +1,7 @@
-Planets!
+LD 58 game
 ===
 
-Puzzle game made completely from scratch in 48 hours for the [Alakajam 21](https://alakajam.com/21st-alakajam) game jam. The theme was "Gravity".
-
-The objective is to create stable planet systems. Each planet has different gravity directions that affect each other planet in range. When every planet is clear of every other planet's influence, the system is considered stable.
+Description will go here.
 
 ## Building
 The game requires only the standard Rust toolchain with the `wasm32-unknown-unknown` target installed.
