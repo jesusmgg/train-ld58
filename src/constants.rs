@@ -7,3 +7,5 @@ pub const GRID_THICKNESS: f32 = 1.0;
 
 pub const SCREEN_W: f32 = 512.0;
 pub const SCREEN_H: f32 = 288.0;
+
+pub const CAMERA_TRANSITION_SPEED: f32 = 0.15;

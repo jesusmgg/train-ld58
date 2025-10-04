@@ -14,6 +14,7 @@ pub struct GameState {
     pub styles: Styles,
 
     pub camera: Camera2D,
+    pub camera_target_pos: f32::Vec2,
 
     pub mouse_pos: f32::Vec2,
 
@@ -30,6 +31,7 @@ impl GameState {
         GameState::show_loading_screen(&styles);
 
         let camera = Self::get_camera();
+        let camera_target_pos = camera.target;
 
         let mouse_pos = f32::Vec2::ZERO;
         let is_mouse_in_grid = false;
@@ -50,6 +52,7 @@ impl GameState {
             styles,
 
             camera,
+            camera_target_pos,
 
             mouse_pos,
 
