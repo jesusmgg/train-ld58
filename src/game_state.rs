@@ -39,22 +39,12 @@ impl GameState {
         let levels = GameState::create_levels();
         let level_active = Some(0);
         // let level_active = Some(levels.len() - 1);
-        let planet_current_index = 0;
-
-        let score = 0;
-
-        let sim_step = 0;
-        let sim_step_computed = 0;
 
         let texture_background_01 = load_texture("assets/background.png").await.unwrap();
 
         let sfx_hover_01 = load_sound("assets/sfx/hover_02.ogg").await.unwrap();
         let sfx_explosion_01 = load_sound("assets/sfx/explosion_01.ogg").await.unwrap();
         let sfx_level_start_01 = load_sound("assets/sfx/level_start_01.ogg").await.unwrap();
-
-        let music_level_end_01 = load_sound("assets/music/planet_001_short.ogg")
-            .await
-            .unwrap();
 
         Self {
             styles,

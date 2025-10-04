@@ -1,11 +1,13 @@
 ## Pending
-- Level design.
-- Graphics.
+- Scrolling camera.
+- 3x3 level grid.
+- In-level grid.
+- Track layout.
+- Track layout UI.
+- Train.
+- Inter-level train movement.
 
 ## Bugs
-- Remove level start sound from level 1.
 - Loading screen is not showing.
 
 ## Future improvements
-- Make grid tile size dynamic.
-- Show non-removable planet background even in failed state.
