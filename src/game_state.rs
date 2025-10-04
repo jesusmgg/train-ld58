@@ -201,10 +201,22 @@ impl GameState {
             .unwrap();
 
         // Corners use placeholder for now
-        let texture_mountain_border_corner_ul = texture_placeholder.clone();
-        let texture_mountain_border_corner_ur = texture_placeholder.clone();
-        let texture_mountain_border_corner_dl = texture_placeholder.clone();
-        let texture_mountain_border_corner_dr = texture_placeholder.clone();
+        let texture_mountain_border_corner_ul =
+            load_texture("assets/sprites/mountain_corner_ul.png")
+                .await
+                .unwrap();
+        let texture_mountain_border_corner_ur =
+            load_texture("assets/sprites/mountain_corner_ur.png")
+                .await
+                .unwrap();
+        let texture_mountain_border_corner_dl =
+            load_texture("assets/sprites/mountain_corner_dl.png")
+                .await
+                .unwrap();
+        let texture_mountain_border_corner_dr =
+            load_texture("assets/sprites/mountain_corner_dr.png")
+                .await
+                .unwrap();
 
         // Mountain tunnels
         let texture_mountain_tunnel_u = load_texture("assets/sprites/mountain_tunnel_u.png")
@@ -430,16 +442,16 @@ impl GameState {
         let mut level = Level::new("1-1", grid_size, f32::vec2(0.0, 0.0), IVec2::new(w, h / 3));
         level
             .tile_layout
-            .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerDR);
+            .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerDL);
         level
             .tile_layout
-            .insert(IVec2::new(w, -1), TileType::MountainBorderCornerDL);
+            .insert(IVec2::new(w, -1), TileType::MountainBorderCornerDR);
         level
             .tile_layout
-            .insert(IVec2::new(-1, h), TileType::MountainBorderCornerUR);
+            .insert(IVec2::new(-1, h), TileType::MountainBorderCornerUL);
         level
             .tile_layout
-            .insert(IVec2::new(w, h), TileType::MountainBorderCornerUL);
+            .insert(IVec2::new(w, h), TileType::MountainBorderCornerUR);
         for x in 0..w {
             level
                 .tile_layout
@@ -492,16 +504,16 @@ impl GameState {
         );
         level
             .tile_layout
-            .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerUL);
+            .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerDL);
         level
             .tile_layout
-            .insert(IVec2::new(w, -1), TileType::MountainBorderCornerUR);
+            .insert(IVec2::new(w, -1), TileType::MountainBorderCornerDR);
         level
             .tile_layout
-            .insert(IVec2::new(-1, h), TileType::MountainBorderCornerDL);
+            .insert(IVec2::new(-1, h), TileType::MountainBorderCornerUL);
         level
             .tile_layout
-            .insert(IVec2::new(w, h), TileType::MountainBorderCornerDR);
+            .insert(IVec2::new(w, h), TileType::MountainBorderCornerUR);
         for x in 0..w {
             level
                 .tile_layout
@@ -564,16 +576,16 @@ impl GameState {
         );
         level
             .tile_layout
-            .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerUL);
+            .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerDL);
         level
             .tile_layout
-            .insert(IVec2::new(w, -1), TileType::MountainBorderCornerUR);
+            .insert(IVec2::new(w, -1), TileType::MountainBorderCornerDR);
         level
             .tile_layout
-            .insert(IVec2::new(-1, h), TileType::MountainBorderCornerDL);
+            .insert(IVec2::new(-1, h), TileType::MountainBorderCornerUL);
         level
             .tile_layout
-            .insert(IVec2::new(w, h), TileType::MountainBorderCornerDR);
+            .insert(IVec2::new(w, h), TileType::MountainBorderCornerUR);
         for x in 0..w {
             level
                 .tile_layout
@@ -626,16 +638,16 @@ impl GameState {
         );
         level
             .tile_layout
-            .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerUL);
+            .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerDL);
         level
             .tile_layout
-            .insert(IVec2::new(w, -1), TileType::MountainBorderCornerUR);
+            .insert(IVec2::new(w, -1), TileType::MountainBorderCornerDR);
         level
             .tile_layout
-            .insert(IVec2::new(-1, h), TileType::MountainBorderCornerDL);
+            .insert(IVec2::new(-1, h), TileType::MountainBorderCornerUL);
         level
             .tile_layout
-            .insert(IVec2::new(w, h), TileType::MountainBorderCornerDR);
+            .insert(IVec2::new(w, h), TileType::MountainBorderCornerUR);
         for x in 0..w {
             if x == w / 3 {
                 level
@@ -698,16 +710,16 @@ impl GameState {
         );
         level
             .tile_layout
-            .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerUL);
+            .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerDL);
         level
             .tile_layout
-            .insert(IVec2::new(w, -1), TileType::MountainBorderCornerUR);
+            .insert(IVec2::new(w, -1), TileType::MountainBorderCornerDR);
         level
             .tile_layout
-            .insert(IVec2::new(-1, h), TileType::MountainBorderCornerDL);
+            .insert(IVec2::new(-1, h), TileType::MountainBorderCornerUL);
         level
             .tile_layout
-            .insert(IVec2::new(w, h), TileType::MountainBorderCornerDR);
+            .insert(IVec2::new(w, h), TileType::MountainBorderCornerUR);
         for x in 0..w {
             if x == w / 3 {
                 level
@@ -780,16 +792,16 @@ impl GameState {
         );
         level
             .tile_layout
-            .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerUL);
+            .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerDL);
         level
             .tile_layout
-            .insert(IVec2::new(w, -1), TileType::MountainBorderCornerUR);
+            .insert(IVec2::new(w, -1), TileType::MountainBorderCornerDR);
         level
             .tile_layout
-            .insert(IVec2::new(-1, h), TileType::MountainBorderCornerDL);
+            .insert(IVec2::new(-1, h), TileType::MountainBorderCornerUL);
         level
             .tile_layout
-            .insert(IVec2::new(w, h), TileType::MountainBorderCornerDR);
+            .insert(IVec2::new(w, h), TileType::MountainBorderCornerUR);
         for x in 0..w {
             if x == w / 3 {
                 level
@@ -852,16 +864,16 @@ impl GameState {
         );
         level
             .tile_layout
-            .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerUL);
+            .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerDL);
         level
             .tile_layout
-            .insert(IVec2::new(w, -1), TileType::MountainBorderCornerUR);
+            .insert(IVec2::new(w, -1), TileType::MountainBorderCornerDR);
         level
             .tile_layout
-            .insert(IVec2::new(-1, h), TileType::MountainBorderCornerDL);
+            .insert(IVec2::new(-1, h), TileType::MountainBorderCornerUL);
         level
             .tile_layout
-            .insert(IVec2::new(w, h), TileType::MountainBorderCornerDR);
+            .insert(IVec2::new(w, h), TileType::MountainBorderCornerUR);
         for x in 0..w {
             if x == w / 3 {
                 level
@@ -914,16 +926,16 @@ impl GameState {
         );
         level
             .tile_layout
-            .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerUL);
+            .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerDL);
         level
             .tile_layout
-            .insert(IVec2::new(w, -1), TileType::MountainBorderCornerUR);
+            .insert(IVec2::new(w, -1), TileType::MountainBorderCornerDR);
         level
             .tile_layout
-            .insert(IVec2::new(-1, h), TileType::MountainBorderCornerDL);
+            .insert(IVec2::new(-1, h), TileType::MountainBorderCornerUL);
         level
             .tile_layout
-            .insert(IVec2::new(w, h), TileType::MountainBorderCornerDR);
+            .insert(IVec2::new(w, h), TileType::MountainBorderCornerUR);
         for x in 0..w {
             if x == w / 3 {
                 level
@@ -986,16 +998,16 @@ impl GameState {
         );
         level
             .tile_layout
-            .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerUL);
+            .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerDL);
         level
             .tile_layout
-            .insert(IVec2::new(w, -1), TileType::MountainBorderCornerUR);
+            .insert(IVec2::new(w, -1), TileType::MountainBorderCornerDR);
         level
             .tile_layout
-            .insert(IVec2::new(-1, h), TileType::MountainBorderCornerDL);
+            .insert(IVec2::new(-1, h), TileType::MountainBorderCornerUL);
         level
             .tile_layout
-            .insert(IVec2::new(w, h), TileType::MountainBorderCornerDR);
+            .insert(IVec2::new(w, h), TileType::MountainBorderCornerUR);
         for x in 0..w {
             if x == w / 3 {
                 level
