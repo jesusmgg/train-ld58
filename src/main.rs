@@ -338,8 +338,21 @@ fn update_tile_placement(game_state: &mut GameState) {
         let tile_pos = game_state.tile_highlighted.unwrap();
         let tile_type = game_state.selected_tile.unwrap();
 
-        if let Some(level) = game_state.current_level_mut() {
-            level.tile_layout.insert(tile_pos, tile_type);
+        // Check if placement is allowed before getting mutable reference
+        let can_place = if let Some(level) = game_state.current_level() {
+            if let Some(existing_tile) = level.tile_layout.get(&tile_pos) {
+                !game_state.is_tile_permanent(*existing_tile)
+            } else {
+                true
+            }
+        } else {
+            false
+        };
+
+        if can_place {
+            if let Some(level) = game_state.current_level_mut() {
+                level.tile_layout.insert(tile_pos, tile_type);
+            }
         }
     }
 }
@@ -388,6 +401,29 @@ fn render_placed_tiles(game_state: &GameState) {
                     for (tile_pos, tile_type) in &level.tile_layout {
                         let x = grid_origin.x + (tile_pos.x as f32 * TILE_SIZE_X);
                         let y = grid_origin.y + (tile_pos.y as f32 * TILE_SIZE_Y);
+
+                        // Draw background for tunnels (behind transparent door area)
+                        match tile_type {
+                            TileType::TunnelUpOpen
+                            | TileType::TunnelDownOpen
+                            | TileType::TunnelLeftOpen
+                            | TileType::TunnelRightOpen => {
+                                draw_rectangle(x, y, TILE_SIZE_X, TILE_SIZE_Y, BLACK);
+                            }
+                            TileType::TunnelUpClosed
+                            | TileType::TunnelDownClosed
+                            | TileType::TunnelLeftClosed
+                            | TileType::TunnelRightClosed => {
+                                draw_rectangle(
+                                    x,
+                                    y,
+                                    TILE_SIZE_X,
+                                    TILE_SIZE_Y,
+                                    game_state.styles.colors.gray_2,
+                                );
+                            }
+                            _ => {}
+                        }
 
                         let texture = game_state.get_texture_for_tile(*tile_type);
                         draw_texture(texture, x, y, WHITE);
