@@ -1,7 +1,7 @@
 Credits
 ===
 
-Developed by Jesus Gonzalez in 48 hours for the [Alakajam 21](https://alakajam.com/21st-alakajam) game jam.
+Developed by Jesus Gonzalez in 48 hours for the [Ludum Dare 58](https://ldjam.com/events/ludum-dare/58) game jam.
 
 ## Tools used
 ### Audio
@@ -17,4 +17,3 @@ Developed by Jesus Gonzalez in 48 hours for the [Alakajam 21](https://alakajam.c
 
 ### Graphics
 - https://libresprite.github.io/
-- https://yeun.github.io/open-color/

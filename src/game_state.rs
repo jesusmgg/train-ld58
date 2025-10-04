@@ -16,26 +16,11 @@ pub struct GameState {
     pub camera: Camera2D,
 
     pub mouse_pos: f32::Vec2,
-    pub is_mouse_in_grid: bool,
-    pub tile_highlighted_prev: IVec2,
-    pub tile_highlighted: IVec2,
 
     pub levels: Vec<Level>,
     pub level_active: Option<usize>,
-    pub planet_current_index: usize,
-
-    pub score: i32,
-
-    pub sim_step: usize,
-    pub sim_step_computed: usize,
 
     pub texture_background_01: Texture2D,
-
-    pub sfx_hover_01: Sound,
-    pub sfx_explosion_01: Sound,
-    pub sfx_level_start_01: Sound,
-
-    pub music_level_end_01: Sound,
 }
 
 impl GameState {
@@ -77,26 +62,11 @@ impl GameState {
             camera,
 
             mouse_pos,
-            is_mouse_in_grid,
-            tile_highlighted_prev,
-            tile_highlighted,
 
             level_active,
             levels,
-            planet_current_index,
-
-            score,
-
-            sim_step,
-            sim_step_computed,
 
             texture_background_01,
-
-            sfx_hover_01,
-            sfx_explosion_01,
-            sfx_level_start_01,
-
-            music_level_end_01,
         }
     }
 
@@ -182,40 +152,16 @@ pub struct Level {
     pub name: &'static str,
     pub grid_tiles: IVec2,
 
-    pub score: i32,
-
-    pub was_failed: bool,
-    pub was_stable: bool,
-
-    pub is_failed: bool,
-    pub is_stable: bool,
-
     pub is_setup: bool,
 }
 
 impl Level {
     pub fn new(name: &'static str, grid_tiles: IVec2) -> Self {
-        let was_failed = false;
-        let was_stable = false;
-
-        let is_failed = false;
-        let is_stable = false;
-
         let is_setup = false;
-
-        let score = 0;
 
         Self {
             name,
             grid_tiles,
-
-            score,
-
-            was_failed,
-            was_stable,
-
-            is_failed,
-            is_stable,
 
             is_setup,
         }
@@ -238,14 +184,6 @@ impl Level {
     }
 
     pub fn reset(&mut self) {
-        self.was_failed = false;
-        self.was_stable = false;
-
-        self.is_failed = false;
-        self.is_stable = false;
-
         self.is_setup = false;
-
-        self.score = 0;
     }
 }
