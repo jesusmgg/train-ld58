@@ -1,0 +1,65 @@
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>ld-58</title>
+  <style>
+    /* Make the body fill the viewport and center the canvas */
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      background: black;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    /* The canvas will use the CSS aspect-ratio property to maintain 16:9.
+       Its width is set to 100% of its container (up to the maximum possible) and height is automatic. */
+    canvas {
+      aspect-ratio: 16 / 9;
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="glcanvas" tabindex="1"></canvas>
+  <script src="mq_js_bundle.js"></script>
+  <script>
+    // Fallback: if needed, dynamically adjust canvas size on window resize.
+    function resizeCanvas() {
+      const canvas = document.getElementById('glcanvas');
+      const windowWidth = window.innerWidth;
+      const windowHeight = window.innerHeight;
+      const aspect = 16 / 9;
+      let newWidth, newHeight;
+
+      if (windowWidth / windowHeight < aspect) {
+        newWidth = windowWidth;
+        newHeight = windowWidth / aspect;
+      } else {
+        newHeight = windowHeight;
+        newWidth = windowHeight * aspect;
+      }
+      canvas.style.width = newWidth + 'px';
+      canvas.style.height = newHeight + 'px';
+    }
+
+    canvas.addEventListener("contextmenu", function (e) {
+      e.preventDefault();
+    });
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+  </script>
+  <script>load("ld-58.wasm");</script>
+</body>
+
+</html>

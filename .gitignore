@@ -1,0 +1,30 @@
+/build
+/build/*
+
+# Cargo
+/target
+
+# Temp files
+*.swp
+'#*#'
+\#*#
+.#*
+*.~undo-tree~
+.*~
+*.*~
+*~.tiled-session~
+*.tiled-session
+*.aup3-wal
+*.aup3-shm
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Game files
+*.sav
