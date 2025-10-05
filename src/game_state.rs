@@ -162,6 +162,9 @@ pub struct GameState {
     pub train_anim_frame: u8,  // 0 or 1 for the two animation frames
     pub train_anim_timer: f32, // Timer for animation
     pub garbage_held: i32,     // Amount of garbage currently on the train
+    pub total_dropoffs_count: i32,  // Total number of dropoff sites across all levels
+    pub dropoffs_full_count: i32,   // Number of dropoff sites at Full3 (3/3) state
+    pub game_won: bool,             // True when all dropoffs are full
 
     // UI
     pub texture_ui_overlay: Texture2D,
@@ -399,6 +402,19 @@ impl GameState {
         let sfx_explosion_01 = load_sound("assets/sfx/explosion_01.ogg").await.unwrap();
         let sfx_level_start_01 = load_sound("assets/sfx/level_start_01.ogg").await.unwrap();
 
+        // Count total dropoffs across all levels
+        let total_dropoffs_count = levels
+            .iter()
+            .flat_map(|level| level.tile_layout.values())
+            .filter(|tile_type| matches!(
+                tile_type,
+                TileType::GarbageDropoffEmpty
+                    | TileType::GarbageDropoffFull1
+                    | TileType::GarbageDropoffFull2
+                    | TileType::GarbageDropoffFull3
+            ))
+            .count() as i32;
+
         Self {
             styles,
 
@@ -480,6 +496,9 @@ impl GameState {
             train_anim_frame: 0,
             train_anim_timer: 0.0,
             garbage_held: 0,
+            total_dropoffs_count,
+            dropoffs_full_count: 0,
+            game_won: false,
 
             texture_ui_overlay,
             texture_ui_card_track_h,
@@ -669,6 +688,36 @@ impl GameState {
                 }
             }
         }
+
+        // Update dropoff counts
+        self.update_dropoff_counts();
+    }
+
+    pub fn update_dropoff_counts(&mut self) {
+        let mut total = 0;
+        let mut full = 0;
+
+        // Count across all levels
+        for level in &self.levels {
+            for tile_type in level.tile_layout.values() {
+                match tile_type {
+                    TileType::GarbageDropoffEmpty
+                    | TileType::GarbageDropoffFull1
+                    | TileType::GarbageDropoffFull2 => {
+                        total += 1;
+                    }
+                    TileType::GarbageDropoffFull3 => {
+                        total += 1;
+                        full += 1;
+                    }
+                    _ => {}
+                }
+            }
+        }
+
+        self.total_dropoffs_count = total;
+        self.dropoffs_full_count = full;
+        self.game_won = full > 0 && full == total;
     }
 
     fn show_loading_screen(styles: &Styles, font: &Font) {
@@ -775,6 +824,9 @@ impl GameState {
         level11
             .tile_layout
             .insert(IVec2::new(9, 5), TileType::Rock1);
+        level11
+            .tile_layout
+            .insert(IVec2::new(2, 5), TileType::House1);
         // Add garbage pickups near houses
         level11
             .tile_layout
@@ -782,6 +834,9 @@ impl GameState {
         level11
             .tile_layout
             .insert(IVec2::new(4, 4), TileType::GarbagePickupFull);
+        level11
+            .tile_layout
+            .insert(IVec2::new(1, 5), TileType::GarbagePickupFull);
         // Add recycling center (dropoff)
         level11
             .tile_layout

@@ -50,6 +50,7 @@ async fn main() {
         // UI
         set_default_camera();
         render_ui_overlay(&game_state);
+        render_garbage_counters(&game_state);
         #[cfg(debug_assertions)]
         render_diagnostics(&game_state);
 
@@ -405,10 +406,60 @@ fn render_ui_overlay(game_state: &GameState) {
     }
 }
 
+fn render_garbage_counters(game_state: &GameState) {
+    // Calculate integer zoom factor for pixel perfect rendering (same as camera)
+    let zoom = ((screen_width() as i32 / SCREEN_W as i32)
+        .min(screen_height() as i32 / SCREEN_H as i32)) as i32;
+
+    let zoomed_w = (SCREEN_W as i32) * zoom;
+    let zoomed_h = (SCREEN_H as i32) * zoom;
+
+    // Center on screen
+    let x_offset = ((screen_width() as i32 - zoomed_w) / 2) as f32;
+    let y_offset = ((screen_height() as i32 - zoomed_h) / 2) as f32;
+
+    // Position on right side of screen
+    let text = format!(
+        "{}/{}",
+        game_state.dropoffs_full_count, game_state.total_dropoffs_count
+    );
+    let text_x = SCREEN_W - 40.0;
+    let text_y = 98.0;
+    let font_size = 18.0;
+
+    let screen_x = x_offset + (text_x * zoom as f32);
+    let screen_y = y_offset + (text_y * zoom as f32);
+
+    draw_scaled_text(
+        &text,
+        screen_x,
+        screen_y,
+        font_size * zoom as f32,
+        &WHITE,
+        &game_state.font,
+    );
+
+    // Garbage held count below
+    let garbage_x = SCREEN_W - 36.0;
+    let garbage_text = format!("{}", game_state.garbage_held);
+    let garbage_y = 170.0;
+    let garbage_screen_x = x_offset + (garbage_x * zoom as f32);
+    let garbage_screen_y = y_offset + (garbage_y * zoom as f32);
+
+    draw_scaled_text(
+        &garbage_text,
+        garbage_screen_x,
+        garbage_screen_y,
+        font_size * zoom as f32,
+        &WHITE,
+        &game_state.font,
+    );
+}
+
 fn render_diagnostics(game_state: &GameState) {
     let font_size = 32.0;
     let color = WHITE;
-    let x = 720.0;
+    let x = 680.0;
     let mut y = 32.0;
 
     draw_scaled_text(
@@ -454,7 +505,7 @@ fn render_diagnostics(game_state: &GameState) {
     );
     y += 24.0;
     draw_scaled_text(
-        format!("Garbage held: {}", &game_state.garbage_held).as_str(),
+        format!("Game won: {}", &game_state.game_won).as_str(),
         x,
         y,
         font_size,
@@ -872,6 +923,9 @@ fn check_garbage_dropoff(game_state: &mut GameState) {
             game_state.garbage_held -= amount_to_drop;
         }
     }
+
+    // Update dropoff counts after any changes
+    game_state.update_dropoff_counts();
 }
 
 fn update_train_animation(game_state: &mut GameState) {

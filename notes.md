@@ -16,9 +16,6 @@
 - Music: train running
 
 ## Pending
-- Garbage collection and tracking.
-- Train controls UI. Start train, stop train, reset train.
-- General dropoff counter.
 - Level design.
 - Music.
 - Sound effects.
