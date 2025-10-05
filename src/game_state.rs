@@ -119,11 +119,19 @@ pub struct GameState {
 
     // Train
     pub texture_train_l_001: Texture2D,
+    pub texture_train_l_002: Texture2D,
     pub texture_train_r_001: Texture2D,
+    pub texture_train_r_002: Texture2D,
+    pub texture_train_u_001: Texture2D,
+    pub texture_train_u_002: Texture2D,
+    pub texture_train_d_001: Texture2D,
+    pub texture_train_d_002: Texture2D,
     pub train_tile_pos: IVec2, // Logical grid position within current level
     pub train_pos_offset: f32::Vec2, // Smooth position offset from tile position (0.0 to 1.0)
     pub train_direction: TrainDirection,
     pub train_state: TrainState,
+    pub train_anim_frame: u8, // 0 or 1 for the two animation frames
+    pub train_anim_timer: f32, // Timer for animation
 }
 
 impl GameState {
@@ -269,7 +277,25 @@ impl GameState {
         let texture_train_l_001 = load_texture("assets/sprites/train_front_l_001.png")
             .await
             .unwrap();
+        let texture_train_l_002 = load_texture("assets/sprites/train_front_l_002.png")
+            .await
+            .unwrap();
         let texture_train_r_001 = load_texture("assets/sprites/train_front_r_001.png")
+            .await
+            .unwrap();
+        let texture_train_r_002 = load_texture("assets/sprites/train_front_r_002.png")
+            .await
+            .unwrap();
+        let texture_train_u_001 = load_texture("assets/sprites/train_front_u_001.png")
+            .await
+            .unwrap();
+        let texture_train_u_002 = load_texture("assets/sprites/train_front_u_002.png")
+            .await
+            .unwrap();
+        let texture_train_d_001 = load_texture("assets/sprites/train_front_d_001.png")
+            .await
+            .unwrap();
+        let texture_train_d_002 = load_texture("assets/sprites/train_front_d_002.png")
             .await
             .unwrap();
 
@@ -325,11 +351,19 @@ impl GameState {
             texture_mountain_tunnel_hole_closed_r,
 
             texture_train_l_001,
+            texture_train_l_002,
             texture_train_r_001,
+            texture_train_r_002,
+            texture_train_u_001,
+            texture_train_u_002,
+            texture_train_d_001,
+            texture_train_d_002,
             train_tile_pos,
             train_pos_offset,
             train_direction,
             train_state,
+            train_anim_frame: 0,
+            train_anim_timer: 0.0,
         }
     }
 

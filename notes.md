@@ -1,5 +1,4 @@
 ## Graphics pending:
-- Roads.
 - Houses.
 - Dumpsters.
 - Recycling plant.
@@ -9,7 +8,6 @@
 
 ## Pending
 - Track layout UI.
-- Train.
 - Inter-level train movement.
 
 ## Bugs

@@ -31,6 +31,7 @@ async fn main() {
         update_tile_selection(&mut game_state);
         update_tile_placement(&mut game_state);
         update_train_movement(&mut game_state);
+        update_train_animation(&mut game_state);
         update_sim(&mut game_state);
         update_camera(&mut game_state);
 
@@ -448,21 +449,21 @@ fn update_train_movement(game_state: &mut GameState) {
                 (TrainDirection::Up, TileType::TrackVertical) => Some(TrainDirection::Up),
                 (TrainDirection::Down, TileType::TrackVertical) => Some(TrainDirection::Down),
 
-                // Corner UL (connects down and right)
-                (TrainDirection::Up, TileType::TrackCornerUL) => Some(TrainDirection::Right),
-                (TrainDirection::Left, TileType::TrackCornerUL) => Some(TrainDirection::Down),
+                // Corner UL (upper-left position, connects down and right)
+                (TrainDirection::Down, TileType::TrackCornerUL) => Some(TrainDirection::Right),
+                (TrainDirection::Left, TileType::TrackCornerUL) => Some(TrainDirection::Up),
 
-                // Corner UR (connects down and left)
-                (TrainDirection::Up, TileType::TrackCornerUR) => Some(TrainDirection::Left),
-                (TrainDirection::Right, TileType::TrackCornerUR) => Some(TrainDirection::Down),
+                // Corner UR (upper-right position, connects down and left)
+                (TrainDirection::Down, TileType::TrackCornerUR) => Some(TrainDirection::Left),
+                (TrainDirection::Right, TileType::TrackCornerUR) => Some(TrainDirection::Up),
 
-                // Corner DL (connects up and right)
-                (TrainDirection::Down, TileType::TrackCornerDL) => Some(TrainDirection::Right),
-                (TrainDirection::Left, TileType::TrackCornerDL) => Some(TrainDirection::Up),
+                // Corner DL (lower-left position, connects up and right)
+                (TrainDirection::Up, TileType::TrackCornerDL) => Some(TrainDirection::Right),
+                (TrainDirection::Left, TileType::TrackCornerDL) => Some(TrainDirection::Down),
 
-                // Corner DR (connects up and left)
-                (TrainDirection::Down, TileType::TrackCornerDR) => Some(TrainDirection::Left),
-                (TrainDirection::Right, TileType::TrackCornerDR) => Some(TrainDirection::Up),
+                // Corner DR (lower-right position, connects up and left)
+                (TrainDirection::Up, TileType::TrackCornerDR) => Some(TrainDirection::Left),
+                (TrainDirection::Right, TileType::TrackCornerDR) => Some(TrainDirection::Down),
 
                 _ => None,
             };
@@ -566,6 +567,21 @@ fn update_train_movement(game_state: &mut GameState) {
     } else {
         // Not crossing yet, just update offset
         game_state.train_pos_offset = new_offset;
+    }
+}
+
+fn update_train_animation(game_state: &mut GameState) {
+    if game_state.train_state != TrainState::Running {
+        return;
+    }
+
+    // Update animation timer
+    game_state.train_anim_timer += get_frame_time();
+
+    // Switch frames
+    if game_state.train_anim_timer >= TRAIN_ANIM_SPEED {
+        game_state.train_anim_timer = 0.0;
+        game_state.train_anim_frame = if game_state.train_anim_frame == 0 { 1 } else { 0 };
     }
 }
 
@@ -1042,12 +1058,16 @@ fn render_train(game_state: &GameState) {
         let train_world_x = base_x + (game_state.train_pos_offset.x * TILE_SIZE_X);
         let train_world_y = base_y + (game_state.train_pos_offset.y * TILE_SIZE_Y);
 
-        // Select texture based on direction
-        let texture = match game_state.train_direction {
-            TrainDirection::Left => &game_state.texture_train_l_001,
-            TrainDirection::Right => &game_state.texture_train_r_001,
-            TrainDirection::Up => &game_state.texture_train_l_001, // Placeholder until up sprite exists
-            TrainDirection::Down => &game_state.texture_train_l_001, // Placeholder until down sprite exists
+        // Select texture based on direction and animation frame
+        let texture = match (game_state.train_direction, game_state.train_anim_frame) {
+            (TrainDirection::Left, 0) => &game_state.texture_train_l_001,
+            (TrainDirection::Left, _) => &game_state.texture_train_l_002,
+            (TrainDirection::Right, 0) => &game_state.texture_train_r_001,
+            (TrainDirection::Right, _) => &game_state.texture_train_r_002,
+            (TrainDirection::Up, 0) => &game_state.texture_train_d_001,
+            (TrainDirection::Up, _) => &game_state.texture_train_d_002,
+            (TrainDirection::Down, 0) => &game_state.texture_train_u_001,
+            (TrainDirection::Down, _) => &game_state.texture_train_u_002,
         };
 
         draw_texture_ex(
