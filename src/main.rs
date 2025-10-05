@@ -144,6 +144,11 @@ fn update_debug_controls(game_state: &mut GameState) {
         game_state.message = Some("Test message!".to_string());
     }
 
+    // Q to add 1 garbage
+    if is_key_pressed(KeyCode::Q) {
+        game_state.garbage_held += 1;
+    }
+
     // T to give 50 of each track piece
     if is_key_pressed(KeyCode::T) {
         game_state.count_track_h = 50;

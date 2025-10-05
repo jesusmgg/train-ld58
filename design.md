@@ -1,13 +1,9 @@
 # Levels completed with the initial 10 10 5 5 5 5 pieces
 ## Level 1-1 (0) done
-Simple solution leaves: 3 3 3 4 3 3
 ## Level 2-1 (3) done
-Simple solution leaves: 2 7 3 3 3 3
 ## Level 3-1 (6) done
-Simple solution leaves: 1 5 4 2 2 5
 ## Level 3-2 (7) done
-Simple solution leaves: 2 4 4 0 0 4
-## Level 3-3 (8)
+## Level 3-3 (8) done
 ## Level 2-3 (5)
 ## Level 1-3 (2)
 ## Level 1-2 (1)
@@ -29,7 +25,7 @@ rocks: 4,4 5,4 6,4 8,2
 disposal: 5,6
 
 # 3-3:
-house: 1,0  9,1
-trash: 0,0 2,0 9,0
-rocks: 4,4 5,4 6,4 8,2
-disposal: 5,6
+house: 0,6 1,6 2,6 8,2
+trash: 0,5, 1,5 3,6 7,2 8,3 9,2
+rocks: 9,4 5,0 5,1
+disposal: 5,3 9,6

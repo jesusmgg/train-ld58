@@ -689,10 +689,8 @@ impl GameState {
     }
 
     pub fn reset_level(&mut self) {
-        // Reset garbage_held counter
-        self.garbage_held = 0;
-
         // Reset all garbage tiles in the current level
+        // Only adjust garbage_held for pickups/dropoffs in this level
         if let Some(level_idx) = self.level_active {
             let level = &mut self.levels[level_idx];
             for y in 0..level.grid_tiles.y {
@@ -701,12 +699,24 @@ impl GameState {
                     if let Some(tile_type) = level.tile_layout.get_mut(&tile_pos) {
                         match tile_type {
                             TileType::GarbagePickupEmpty => {
+                                // This garbage was picked up from this level, return it
                                 *tile_type = TileType::GarbagePickupFull;
+                                self.garbage_held -= 1;
                             }
-                            TileType::GarbageDropoffFull1
-                            | TileType::GarbageDropoffFull2
-                            | TileType::GarbageDropoffFull3 => {
+                            TileType::GarbageDropoffFull1 => {
+                                // Return 1 garbage to player
                                 *tile_type = TileType::GarbageDropoffEmpty;
+                                self.garbage_held += 1;
+                            }
+                            TileType::GarbageDropoffFull2 => {
+                                // Return 2 garbage to player
+                                *tile_type = TileType::GarbageDropoffEmpty;
+                                self.garbage_held += 2;
+                            }
+                            TileType::GarbageDropoffFull3 => {
+                                // Return 3 garbage to player
+                                *tile_type = TileType::GarbageDropoffEmpty;
+                                self.garbage_held += 3;
                             }
                             _ => {}
                         }
@@ -1464,12 +1474,12 @@ impl GameState {
         levels.push(level32);
 
         // Level 3-3 (grid 2,2 - has neighbors: up 2-3, left 3-2)
-        // Default start: top tunnel (first one at w/3)
+        // Default start: left tunnel at y=2
         let mut level33 = Level::new(
             "3-3",
             grid_size,
             f32::vec2(SCREEN_W * 2.0, SCREEN_H * 2.0),
-            IVec2::new(w / 3, -1),
+            IVec2::new(-1, 2),
         );
         level33
             .tile_layout
@@ -1523,6 +1533,55 @@ impl GameState {
                 .tile_layout
                 .insert(IVec2::new(w, y), TileType::MountainBorderRight);
         }
+        // Add houses
+        level33
+            .tile_layout
+            .insert(IVec2::new(0, 6), TileType::House1);
+        level33
+            .tile_layout
+            .insert(IVec2::new(1, 6), TileType::House2);
+        level33
+            .tile_layout
+            .insert(IVec2::new(2, 6), TileType::House1);
+        level33
+            .tile_layout
+            .insert(IVec2::new(8, 2), TileType::House2);
+        // Add rocks
+        level33
+            .tile_layout
+            .insert(IVec2::new(9, 4), TileType::Rock1);
+        level33
+            .tile_layout
+            .insert(IVec2::new(5, 0), TileType::Rock1);
+        level33
+            .tile_layout
+            .insert(IVec2::new(5, 1), TileType::Rock1);
+        // Add garbage pickups
+        level33
+            .tile_layout
+            .insert(IVec2::new(0, 5), TileType::GarbagePickupFull);
+        level33
+            .tile_layout
+            .insert(IVec2::new(1, 5), TileType::GarbagePickupFull);
+        level33
+            .tile_layout
+            .insert(IVec2::new(3, 6), TileType::GarbagePickupFull);
+        level33
+            .tile_layout
+            .insert(IVec2::new(7, 2), TileType::GarbagePickupFull);
+        level33
+            .tile_layout
+            .insert(IVec2::new(8, 3), TileType::GarbagePickupFull);
+        level33
+            .tile_layout
+            .insert(IVec2::new(9, 2), TileType::GarbagePickupFull);
+        // Add recycling centers (dropoffs)
+        level33
+            .tile_layout
+            .insert(IVec2::new(5, 3), TileType::GarbageDropoffEmpty);
+        level33
+            .tile_layout
+            .insert(IVec2::new(9, 6), TileType::GarbageDropoffEmpty);
         levels.push(level33);
 
         levels
