@@ -281,7 +281,7 @@ fn render_tile_highlight(game_state: &GameState) {
 
 fn render_diagnostics(game_state: &GameState) {
     let font_size = 32.0;
-    let color = Color::from_hex(0x151515);
+    let color = WHITE;
     let x = 16.0;
     let mut y = 32.0;
 

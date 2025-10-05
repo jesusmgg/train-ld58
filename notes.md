@@ -1,14 +1,11 @@
 ## Graphics pending:
-- Train up.
-- Train down.
-- Train animation.
-- Mountains corners.
 - Roads.
 - Houses.
 - Dumpsters.
 - Recycling plant.
 - Rocks.
 - Water.
+- Smoke particles.
 
 ## Pending
 - Track layout UI.
