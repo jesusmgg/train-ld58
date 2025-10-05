@@ -26,6 +26,7 @@ async fn main() {
 
         // Game logic update
         update_tile_highlight(&mut game_state);
+        update_tile_highlight_position(&mut game_state);
         update_ui_card_selection(&mut game_state);
         update_tile_placement(&mut game_state);
         update_tile_removal(&mut game_state);
@@ -353,8 +354,21 @@ fn update_tile_highlight(game_state: &mut GameState) {
     }
 }
 
-fn render_tile_highlight(game_state: &GameState) {
+fn update_tile_highlight_position(game_state: &mut GameState) {
     if let Some(tile) = game_state.tile_highlighted {
+        // Calculate target position
+        let target = f32::vec2(tile.x as f32, tile.y as f32);
+
+        // Smooth interpolation
+        let delta = get_frame_time();
+        let t = 1.0 - (1.0 - TILE_HIGHLIGHT_LERP_SPEED * delta).max(0.0);
+
+        game_state.tile_highlight_pos = game_state.tile_highlight_pos + (target - game_state.tile_highlight_pos) * t;
+    }
+}
+
+fn render_tile_highlight(game_state: &GameState) {
+    if game_state.tile_highlighted.is_some() {
         if let Some(level) = game_state.current_level() {
             // Highlight color
             let mut highlight_color = game_state.styles.colors.yellow_1;
@@ -363,8 +377,9 @@ fn render_tile_highlight(game_state: &GameState) {
             let grid_offset = level.grid_offset();
             let grid_origin = level.pos_world + grid_offset;
 
-            let x = grid_origin.x + (tile.x as f32 * TILE_SIZE_X);
-            let y = grid_origin.y + (tile.y as f32 * TILE_SIZE_Y);
+            // Use interpolated position for smooth movement
+            let x = grid_origin.x + (game_state.tile_highlight_pos.x * TILE_SIZE_X);
+            let y = grid_origin.y + (game_state.tile_highlight_pos.y * TILE_SIZE_Y);
 
             draw_rectangle(x, y, TILE_SIZE_X, TILE_SIZE_Y, highlight_color);
         }
@@ -615,7 +630,8 @@ fn render_message(game_state: &GameState) {
 
 fn render_diagnostics(game_state: &GameState) {
     let font_size = 32.0;
-    let color = WHITE;
+    let mut color = WHITE;
+    color.a = 0.5;
     let x = 680.0;
     let mut y = 32.0;
 
@@ -1308,13 +1324,14 @@ fn update_tile_removal(game_state: &mut GameState) {
 fn render_selected_tile_preview(game_state: &GameState) {
     // Show selected tile at cursor with low alpha
     if let Some(tile_type) = game_state.selected_tile {
-        if let Some(tile_pos) = game_state.tile_highlighted {
+        if game_state.tile_highlighted.is_some() {
             if let Some(level) = game_state.current_level() {
                 let grid_offset = level.grid_offset();
                 let grid_origin = level.pos_world + grid_offset;
 
-                let x = grid_origin.x + (tile_pos.x as f32 * TILE_SIZE_X);
-                let y = grid_origin.y + (tile_pos.y as f32 * TILE_SIZE_Y);
+                // Use interpolated position for smooth movement
+                let x = grid_origin.x + (game_state.tile_highlight_pos.x * TILE_SIZE_X);
+                let y = grid_origin.y + (game_state.tile_highlight_pos.y * TILE_SIZE_Y);
 
                 let texture = game_state.get_texture_for_tile(tile_type);
                 let mut color = WHITE;

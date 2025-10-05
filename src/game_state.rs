@@ -83,6 +83,7 @@ pub struct GameState {
     pub mouse_pos: f32::Vec2,
     pub tile_highlighted: Option<IVec2>,
     pub tile_highlighted_prev: Option<IVec2>,
+    pub tile_highlight_pos: f32::Vec2, // Smoothly interpolated highlight position
 
     pub levels: Vec<Level>,
     pub level_active: Option<usize>,
@@ -200,6 +201,7 @@ impl GameState {
         let mouse_pos = f32::Vec2::ZERO;
         let tile_highlighted = None;
         let tile_highlighted_prev = None;
+        let tile_highlight_pos = f32::Vec2::ZERO;
 
         let levels = GameState::create_levels();
         let level_active = Some(0);
@@ -433,6 +435,7 @@ impl GameState {
             mouse_pos,
             tile_highlighted,
             tile_highlighted_prev,
+            tile_highlight_pos,
 
             level_active,
             levels,
