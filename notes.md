@@ -14,14 +14,14 @@
 - Win fanfare
 - Tunnel opening (explosion)
 - Music: train stopped
-- Music: train running
 
 ## Pending
+- Check grammar of help message.
 - Music.
 - Sound effects.
 - Initial logo.
 - Game saving.
-- Help popup.
+- Full playtest.
 
 ## Bugs
 - Loading screen is not showing.

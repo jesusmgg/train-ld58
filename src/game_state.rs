@@ -186,6 +186,13 @@ pub struct GameState {
 
     // Font
     pub font: Font,
+
+    // Music
+    pub music_train_running_1: macroquad::audio::Sound,
+    pub music_train_running_2: macroquad::audio::Sound,
+    pub current_music_index: Option<usize>, // 0 or 1 for which track is playing
+    pub music_volume: f32,                  // Current volume (0.0 to 1.0)
+    pub music_target_volume: f32,           // Target volume for fading
 }
 
 impl GameState {
@@ -426,6 +433,14 @@ impl GameState {
         let sfx_explosion_01 = load_sound("assets/sfx/explosion_01.ogg").await.unwrap();
         let sfx_level_start_01 = load_sound("assets/sfx/level_start_01.ogg").await.unwrap();
 
+        // Load music tracks
+        let music_train_running_1 = load_sound("assets/music/train_running_loop_01.ogg")
+            .await
+            .unwrap();
+        let music_train_running_2 = load_sound("assets/music/train_running_loop_02.ogg")
+            .await
+            .unwrap();
+
         // Count total dropoffs across all levels
         let total_dropoffs_count = levels
             .iter()
@@ -544,6 +559,12 @@ impl GameState {
             texture_ui_card_selection,
 
             font,
+
+            music_train_running_1,
+            music_train_running_2,
+            current_music_index: None,
+            music_volume: 0.0,
+            music_target_volume: 0.0,
         }
     }
 

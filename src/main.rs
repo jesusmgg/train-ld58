@@ -37,6 +37,7 @@ async fn main() {
         update_sim(&mut game_state);
         update_level_22_tunnels(&mut game_state);
         update_help_message(&mut game_state);
+        update_music(&mut game_state);
         update_camera(&mut game_state);
 
         // Render
@@ -1408,6 +1409,77 @@ fn update_help_message(game_state: &mut GameState) {
     // Show help message when H is pressed
     else if is_key_pressed(KeyCode::H) {
         game_state.message = help_msg;
+    }
+}
+
+fn update_music(game_state: &mut GameState) {
+    use macroquad::audio::{play_sound, set_sound_volume, stop_sound, PlaySoundParams};
+    use macroquad::rand::rand;
+
+    let fade_speed = 0.5; // Volume change per second
+    let target_volume = 0.4; // Max music volume
+
+    if game_state.train_state == TrainState::Running {
+        // Train is running - fade in music
+        game_state.music_target_volume = target_volume;
+
+        // Start music if not already playing
+        if game_state.current_music_index.is_none() {
+            // Pick random track
+            let track_index = rand() as usize % 2;
+            game_state.current_music_index = Some(track_index);
+
+            let sound = if track_index == 0 {
+                &game_state.music_train_running_1
+            } else {
+                &game_state.music_train_running_2
+            };
+
+            // Note: Macroquad doesn't support seeking to a specific position in audio
+            // So we start from the beginning each time
+            play_sound(
+                sound,
+                PlaySoundParams {
+                    looped: true,
+                    volume: 0.0,
+                },
+            );
+        }
+    } else {
+        // Train is stopped - fade out music
+        game_state.music_target_volume = 0.0;
+    }
+
+    // Smooth volume fading
+    if game_state.music_volume < game_state.music_target_volume {
+        game_state.music_volume = (game_state.music_volume + fade_speed * get_frame_time())
+            .min(game_state.music_target_volume);
+    } else if game_state.music_volume > game_state.music_target_volume {
+        game_state.music_volume = (game_state.music_volume - fade_speed * get_frame_time())
+            .max(game_state.music_target_volume);
+
+        // Stop music completely when faded out
+        if game_state.music_volume == 0.0 {
+            if let Some(track_index) = game_state.current_music_index {
+                let sound = if track_index == 0 {
+                    &game_state.music_train_running_1
+                } else {
+                    &game_state.music_train_running_2
+                };
+                stop_sound(sound);
+                game_state.current_music_index = None;
+            }
+        }
+    }
+
+    // Apply volume to currently playing track
+    if let Some(track_index) = game_state.current_music_index {
+        let sound = if track_index == 0 {
+            &game_state.music_train_running_1
+        } else {
+            &game_state.music_train_running_2
+        };
+        set_sound_volume(sound, game_state.music_volume);
     }
 }
 
