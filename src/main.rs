@@ -395,8 +395,9 @@ fn render_ui_overlay(game_state: &GameState) {
             &count.to_string(),
             count_x,
             count_y,
-            12.0 * zoom as f32,
+            16.0 * zoom as f32,
             &WHITE,
+            &game_state.font,
         );
     }
 }
@@ -413,6 +414,7 @@ fn render_diagnostics(game_state: &GameState) {
         y,
         font_size,
         &color,
+        &game_state.font,
     );
     y += 24.0;
 
@@ -436,6 +438,7 @@ fn render_diagnostics(game_state: &GameState) {
         y,
         font_size,
         &color,
+        &game_state.font,
     );
     y += 24.0;
     draw_scaled_text(
@@ -444,6 +447,7 @@ fn render_diagnostics(game_state: &GameState) {
         y,
         font_size,
         &color,
+        &game_state.font,
     );
     y += 24.0;
     draw_scaled_text(
@@ -452,6 +456,7 @@ fn render_diagnostics(game_state: &GameState) {
         y,
         font_size,
         &color,
+        &game_state.font,
     );
 }
 
@@ -1176,10 +1181,18 @@ fn render_garbage_indicators(game_state: &GameState) {
                     // Draw indicators for dropoff sites
                     for (tile_pos, tile_type) in &level.tile_layout {
                         let indicator_texture = match tile_type {
-                            TileType::GarbageDropoffEmpty => Some(&game_state.texture_garbage_indicator_0),
-                            TileType::GarbageDropoffFull1 => Some(&game_state.texture_garbage_indicator_1),
-                            TileType::GarbageDropoffFull2 => Some(&game_state.texture_garbage_indicator_2),
-                            TileType::GarbageDropoffFull3 => Some(&game_state.texture_garbage_indicator_3),
+                            TileType::GarbageDropoffEmpty => {
+                                Some(&game_state.texture_garbage_indicator_0)
+                            }
+                            TileType::GarbageDropoffFull1 => {
+                                Some(&game_state.texture_garbage_indicator_1)
+                            }
+                            TileType::GarbageDropoffFull2 => {
+                                Some(&game_state.texture_garbage_indicator_2)
+                            }
+                            TileType::GarbageDropoffFull3 => {
+                                Some(&game_state.texture_garbage_indicator_3)
+                            }
                             _ => None,
                         };
 

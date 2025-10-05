@@ -5,6 +5,7 @@ use macroquad::{
     camera::{set_camera, Camera2D},
     math::{f32, IVec2},
     shapes::draw_rectangle,
+    text::{load_ttf_font, Font},
     texture::{load_texture, Texture2D},
     window::{clear_background, screen_height, screen_width},
 };
@@ -171,13 +172,21 @@ pub struct GameState {
     pub texture_ui_card_track_dl: Texture2D,
     pub texture_ui_card_track_dr: Texture2D,
     pub texture_ui_card_selection: Texture2D,
+
+    // Font
+    pub font: Font,
 }
 
 impl GameState {
     pub async fn new() -> Self {
         let styles = Styles::new();
 
-        GameState::show_loading_screen(&styles);
+        // Load font first for loading screen
+        let font = load_ttf_font("assets/fonts/KenneyPixel.ttf")
+            .await
+            .unwrap();
+
+        GameState::show_loading_screen(&styles, &font);
 
         let camera = Self::get_camera();
         let camera_target_pos = camera.target;
@@ -480,6 +489,8 @@ impl GameState {
             texture_ui_card_track_dl,
             texture_ui_card_track_dr,
             texture_ui_card_selection,
+
+            font,
         }
     }
 
@@ -632,7 +643,7 @@ impl GameState {
         }
     }
 
-    fn show_loading_screen(styles: &Styles) {
+    fn show_loading_screen(styles: &Styles, font: &Font) {
         clear_background(styles.colors.bg_light);
         let font_size = 16.0;
         let message_size = 148.0;
@@ -658,6 +669,7 @@ impl GameState {
             pos_message_y + font_size / 1.333,
             font_size,
             &styles.colors.brown_3,
+            font,
         );
     }
 
