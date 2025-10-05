@@ -28,6 +28,7 @@ async fn main() {
         update_tile_placement(&mut game_state);
         update_tile_removal(&mut game_state);
         update_train_movement(&mut game_state);
+        check_garbage_pickup(&mut game_state);
         update_train_animation(&mut game_state);
         update_sim(&mut game_state);
         update_camera(&mut game_state);
@@ -442,6 +443,14 @@ fn render_diagnostics(game_state: &GameState) {
         font_size,
         &color,
     );
+    y += 24.0;
+    draw_scaled_text(
+        format!("Garbage held: {}", &game_state.garbage_held).as_str(),
+        x,
+        y,
+        font_size,
+        &color,
+    );
 }
 
 fn update_train_movement(game_state: &mut GameState) {
@@ -733,6 +742,47 @@ fn update_train_movement(game_state: &mut GameState) {
     } else {
         // Not crossing yet, just update offset
         game_state.train_pos_offset = new_offset;
+    }
+}
+
+fn check_garbage_pickup(game_state: &mut GameState) {
+    if game_state.train_state != TrainState::Running {
+        return;
+    }
+
+    let train_pos = game_state.train_tile_pos;
+
+    // Check all 4 adjacent tiles for garbage pickup
+    let adjacent_positions = [
+        train_pos + IVec2::new(0, -1), // Up
+        train_pos + IVec2::new(0, 1),  // Down
+        train_pos + IVec2::new(-1, 0), // Left
+        train_pos + IVec2::new(1, 0),  // Right
+    ];
+
+    // Check which tiles have garbage to pick up
+    let garbage_positions: Vec<IVec2> = if let Some(level) = game_state.current_level() {
+        adjacent_positions
+            .iter()
+            .filter(|pos| {
+                if let Some(tile) = level.tile_layout.get(pos) {
+                    matches!(tile, TileType::GarbagePickupFull)
+                } else {
+                    false
+                }
+            })
+            .copied()
+            .collect()
+    } else {
+        Vec::new()
+    };
+
+    // Pick up garbage and mark as empty
+    for pos in garbage_positions {
+        if let Some(level) = game_state.current_level_mut() {
+            level.tile_layout.insert(pos, TileType::GarbagePickupEmpty);
+            game_state.garbage_held += 1;
+        }
     }
 }
 

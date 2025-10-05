@@ -45,7 +45,8 @@ pub enum TileType {
     House2,
 
     // Garbage system
-    GarbagePickup,
+    GarbagePickupFull,
+    GarbagePickupEmpty,
     GarbageDropoff,
 
     // Mountain borders
@@ -106,6 +107,10 @@ pub struct GameState {
     pub texture_house_1: Texture2D,
     pub texture_house_2: Texture2D,
 
+    // Garbage
+    pub texture_garbage_full: Texture2D,
+    pub texture_garbage_empty: Texture2D,
+
     // Mountain borders
     pub texture_mountain_border_u: Texture2D,
     pub texture_mountain_border_d: Texture2D,
@@ -147,6 +152,7 @@ pub struct GameState {
     pub train_state: TrainState,
     pub train_anim_frame: u8,  // 0 or 1 for the two animation frames
     pub train_anim_timer: f32, // Timer for animation
+    pub garbage_held: i32,     // Amount of garbage currently on the train
 
     // UI
     pub texture_ui_overlay: Texture2D,
@@ -231,6 +237,10 @@ impl GameState {
         let texture_rock_1 = load_texture("assets/sprites/rock_001.png").await.unwrap();
         let texture_house_1 = load_texture("assets/sprites/house_001.png").await.unwrap();
         let texture_house_2 = load_texture("assets/sprites/house_002.png").await.unwrap();
+
+        // Garbage
+        let texture_garbage_full = load_texture("assets/sprites/garbage_full.png").await.unwrap();
+        let texture_garbage_empty = load_texture("assets/sprites/garbage_empty.png").await.unwrap();
 
         // Mountain borders
         let texture_mountain_border_u = load_texture("assets/sprites/mountain_border_u.png")
@@ -402,6 +412,9 @@ impl GameState {
             texture_house_1,
             texture_house_2,
 
+            texture_garbage_full,
+            texture_garbage_empty,
+
             texture_mountain_border_u,
             texture_mountain_border_d,
             texture_mountain_border_l,
@@ -439,6 +452,7 @@ impl GameState {
             train_state,
             train_anim_frame: 0,
             train_anim_timer: 0.0,
+            garbage_held: 0,
 
             texture_ui_overlay,
             texture_ui_card_track_h,
@@ -477,6 +491,10 @@ impl GameState {
             TileType::Rock1 => &self.texture_rock_1,
             TileType::House1 => &self.texture_house_1,
             TileType::House2 => &self.texture_house_2,
+
+            TileType::GarbagePickupFull => &self.texture_garbage_full,
+            TileType::GarbagePickupEmpty => &self.texture_garbage_empty,
+            TileType::GarbageDropoff => &self.texture_placeholder,
 
             TileType::MountainBorderUp => &self.texture_mountain_border_u,
             TileType::MountainBorderDown => &self.texture_mountain_border_d,
@@ -524,6 +542,9 @@ impl GameState {
                 | TileType::Rock1
                 | TileType::House1
                 | TileType::House2
+                | TileType::GarbagePickupFull
+                | TileType::GarbagePickupEmpty
+                | TileType::GarbageDropoff
         )
     }
 
@@ -690,6 +711,13 @@ impl GameState {
         level11
             .tile_layout
             .insert(IVec2::new(9, 5), TileType::Rock1);
+        // Add garbage pickups near houses
+        level11
+            .tile_layout
+            .insert(IVec2::new(7, 1), TileType::GarbagePickupFull);
+        level11
+            .tile_layout
+            .insert(IVec2::new(4, 4), TileType::GarbagePickupFull);
         levels.push(level11);
 
         // Level 1-2 (grid 1,0 - has neighbors: left 1-1, right 1-3, down 2-2)
