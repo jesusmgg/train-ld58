@@ -36,6 +36,7 @@ async fn main() {
         update_train_animation(&mut game_state);
         update_sim(&mut game_state);
         update_level_22_tunnels(&mut game_state);
+        update_help_message(&mut game_state);
         update_camera(&mut game_state);
 
         // Render
@@ -655,9 +656,13 @@ fn render_message(game_state: &GameState) {
             Color::new(0.0, 0.0, 0.0, 0.7),
         );
 
+        // Split message into lines
+        let lines: Vec<&str> = message.split('\n').collect();
+        let line_height = 20.0;
+
         // Message box dimensions
         let box_width = 280.0;
-        let box_height = 60.0;
+        let box_height = 40.0 + (lines.len() as f32 * line_height);
         let box_x = (SCREEN_W - box_width) / 2.0;
         let box_y = (SCREEN_H - box_height) / 2.0;
 
@@ -689,22 +694,26 @@ fn render_message(game_state: &GameState) {
             game_state.styles.colors.orange_2,
         );
 
-        // Draw message text
+        // Draw message text lines
         let font_size = 16.0;
         let text_x = box_x + 10.0;
-        let text_y = box_y + 30.0;
+        let mut text_y = box_y + 25.0;
 
-        let screen_text_x = x_offset + (text_x * zoom as f32);
-        let screen_text_y = y_offset + (text_y * zoom as f32);
+        for line in lines {
+            let screen_text_x = x_offset + (text_x * zoom as f32);
+            let screen_text_y = y_offset + (text_y * zoom as f32);
 
-        draw_scaled_text(
-            message,
-            screen_text_x,
-            screen_text_y,
-            font_size * zoom as f32,
-            &game_state.styles.colors.brown_3,
-            &game_state.font,
-        );
+            draw_scaled_text(
+                line,
+                screen_text_x,
+                screen_text_y,
+                font_size * zoom as f32,
+                &game_state.styles.colors.brown_3,
+                &game_state.font,
+            );
+
+            text_y += line_height;
+        }
     }
 }
 
@@ -1372,7 +1381,9 @@ fn update_level_22_tunnels(game_state: &mut GameState) {
                                 TileType::TunnelUpClosed => *tile_type = TileType::TunnelUpOpen,
                                 TileType::TunnelDownClosed => *tile_type = TileType::TunnelDownOpen,
                                 TileType::TunnelLeftClosed => *tile_type = TileType::TunnelLeftOpen,
-                                TileType::TunnelRightClosed => *tile_type = TileType::TunnelRightOpen,
+                                TileType::TunnelRightClosed => {
+                                    *tile_type = TileType::TunnelRightOpen
+                                }
                                 _ => {}
                             }
                         }
@@ -1386,7 +1397,28 @@ fn update_level_22_tunnels(game_state: &mut GameState) {
     }
 }
 
-fn update_win_condition(game_state: &mut GameState) {}
+fn update_help_message(game_state: &mut GameState) {
+    let help_msg = Some("Build railroads, collect garbage and take it to\nthe recycling centers.\n\nStart/stop the train with <Space>.\n\nReset the current level with <R>.".to_string());
+
+    // Show help message at the start of the game
+    if !game_state.help_message_shown {
+        game_state.help_message_shown = true;
+        game_state.message = help_msg;
+    }
+    // Show help message when H is pressed
+    else if is_key_pressed(KeyCode::H) {
+        game_state.message = help_msg;
+    }
+}
+
+fn update_win_condition(game_state: &mut GameState) {
+    // Check if game is won and message hasn't been shown yet
+    if game_state.game_won && !game_state.win_message_shown {
+        game_state.win_message_shown = true;
+        game_state.message =
+            Some("Congratulations! You've filled all recycling centers!".to_string());
+    }
+}
 
 fn update_camera(game_state: &mut GameState) {
     // Recalculate viewport for current window size

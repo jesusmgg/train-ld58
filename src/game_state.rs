@@ -171,6 +171,8 @@ pub struct GameState {
     pub visited_levels: Vec<bool>,     // Track which levels have been visited
     pub level_22_tunnel_timer: Option<f32>, // Timer for opening level 2-2 tunnels
     pub level_22_tunnels_opened: bool, // Whether level 2-2 tunnels have been opened
+    pub win_message_shown: bool,       // Whether the win message has been shown
+    pub help_message_shown: bool,      // Whether the help message has been shown
 
     // UI
     pub texture_ui_overlay: Texture2D,
@@ -529,6 +531,8 @@ impl GameState {
             visited_levels,
             level_22_tunnel_timer: None,
             level_22_tunnels_opened: false,
+            win_message_shown: false,
+            help_message_shown: false,
 
             texture_ui_overlay,
             texture_ui_card_track_h,

@@ -17,10 +17,8 @@
 - Music: train running
 
 ## Pending
-- Level design.
 - Music.
 - Sound effects.
-- Win UI.
 - Initial logo.
 - Game saving.
 - Help popup.
