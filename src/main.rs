@@ -187,6 +187,11 @@ fn update_debug_controls(game_state: &mut GameState) {
         game_state.skip_level_requirements = !game_state.skip_level_requirements;
     }
 
+    // E to trigger endgame/win
+    if is_key_pressed(KeyCode::E) {
+        game_state.game_won = true;
+    }
+
     // G to reset track pieces to standard amounts
     if is_key_pressed(KeyCode::G) {
         game_state.count_track_h = 10;
@@ -1475,6 +1480,40 @@ fn update_level_22_tunnels(game_state: &mut GameState) {
                         },
                     );
 
+                    // Count visited levels
+                    let visited_count =
+                        game_state.visited_levels.iter().filter(|&&v| v).count() as i32;
+
+                    // Count used track pieces across all levels
+                    let mut used_h = 0;
+                    let mut used_v = 0;
+                    let mut used_ul = 0;
+                    let mut used_ur = 0;
+                    let mut used_dl = 0;
+                    let mut used_dr = 0;
+
+                    for level in &game_state.levels {
+                        for (_pos, tile_type) in level.tile_layout.iter() {
+                            match tile_type {
+                                TileType::TrackHorizontal => used_h += 1,
+                                TileType::TrackVertical => used_v += 1,
+                                TileType::TrackCornerUL => used_ul += 1,
+                                TileType::TrackCornerUR => used_ur += 1,
+                                TileType::TrackCornerDL => used_dl += 1,
+                                TileType::TrackCornerDR => used_dr += 1,
+                                _ => {}
+                            }
+                        }
+                    }
+
+                    // Add parts: straight = 10 * visited - used, corners = 5 * visited - used
+                    game_state.count_track_h += (10 * visited_count - used_h).max(0);
+                    game_state.count_track_v += (10 * visited_count - used_v).max(0);
+                    game_state.count_track_ul += (5 * visited_count - used_ul).max(0);
+                    game_state.count_track_ur += (5 * visited_count - used_ur).max(0);
+                    game_state.count_track_dl += (5 * visited_count - used_dl).max(0);
+                    game_state.count_track_dr += (5 * visited_count - used_dr).max(0);
+
                     // Show message to player
                     game_state.message = Some("All tunnels are now open!".to_string());
                 }
@@ -1593,7 +1632,7 @@ fn update_win_condition(game_state: &mut GameState) {
     if game_state.game_won && !game_state.win_message_shown {
         game_state.win_message_shown = true;
         game_state.message =
-            Some("Congratulations! You've filled all recycling centers!".to_string());
+            Some("Congratulations!\nYou've filled all recycling centers!".to_string());
 
         // Play dialog sound
         use macroquad::audio::{play_sound, PlaySoundParams};
