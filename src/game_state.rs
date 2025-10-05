@@ -84,6 +84,14 @@ pub struct GameState {
 
     pub selected_tile: Option<TileType>,
 
+    // Track piece inventory counts
+    pub count_track_h: i32,
+    pub count_track_v: i32,
+    pub count_track_ul: i32,
+    pub count_track_ur: i32,
+    pub count_track_dl: i32,
+    pub count_track_dr: i32,
+
     pub texture_background_01: Texture2D,
     pub texture_track_h: Texture2D,
     pub texture_track_v: Texture2D,
@@ -169,6 +177,14 @@ impl GameState {
         // let level_active = Some(levels.len() - 1);
 
         let selected_tile = None;
+
+        // Initialize track piece counts
+        let count_track_h = 10;
+        let count_track_v = 10;
+        let count_track_ul = 5;
+        let count_track_ur = 5;
+        let count_track_dl = 5;
+        let count_track_dr = 5;
 
         // Initialize train position and direction based on first level's default start
         let train_tile_pos = levels[0].default_train_start;
@@ -366,6 +382,13 @@ impl GameState {
 
             selected_tile,
 
+            count_track_h,
+            count_track_v,
+            count_track_ul,
+            count_track_ur,
+            count_track_dl,
+            count_track_dr,
+
             texture_background_01,
             texture_track_h,
             texture_track_v,
@@ -502,6 +525,66 @@ impl GameState {
                 | TileType::House1
                 | TileType::House2
         )
+    }
+
+    pub fn get_track_count(&self, tile_type: TileType) -> i32 {
+        match tile_type {
+            TileType::TrackHorizontal => self.count_track_h,
+            TileType::TrackVertical => self.count_track_v,
+            TileType::TrackCornerUL => self.count_track_ul,
+            TileType::TrackCornerUR => self.count_track_ur,
+            TileType::TrackCornerDL => self.count_track_dl,
+            TileType::TrackCornerDR => self.count_track_dr,
+            _ => 0,
+        }
+    }
+
+    pub fn decrement_track_count(&mut self, tile_type: TileType) {
+        match tile_type {
+            TileType::TrackHorizontal => {
+                if self.count_track_h > 0 {
+                    self.count_track_h -= 1;
+                }
+            }
+            TileType::TrackVertical => {
+                if self.count_track_v > 0 {
+                    self.count_track_v -= 1;
+                }
+            }
+            TileType::TrackCornerUL => {
+                if self.count_track_ul > 0 {
+                    self.count_track_ul -= 1;
+                }
+            }
+            TileType::TrackCornerUR => {
+                if self.count_track_ur > 0 {
+                    self.count_track_ur -= 1;
+                }
+            }
+            TileType::TrackCornerDL => {
+                if self.count_track_dl > 0 {
+                    self.count_track_dl -= 1;
+                }
+            }
+            TileType::TrackCornerDR => {
+                if self.count_track_dr > 0 {
+                    self.count_track_dr -= 1;
+                }
+            }
+            _ => {}
+        }
+    }
+
+    pub fn increment_track_count(&mut self, tile_type: TileType) {
+        match tile_type {
+            TileType::TrackHorizontal => self.count_track_h += 1,
+            TileType::TrackVertical => self.count_track_v += 1,
+            TileType::TrackCornerUL => self.count_track_ul += 1,
+            TileType::TrackCornerUR => self.count_track_ur += 1,
+            TileType::TrackCornerDL => self.count_track_dl += 1,
+            TileType::TrackCornerDR => self.count_track_dr += 1,
+            _ => {}
+        }
     }
 
     fn show_loading_screen(styles: &Styles) {

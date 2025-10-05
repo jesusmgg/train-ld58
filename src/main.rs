@@ -26,6 +26,7 @@ async fn main() {
         update_tile_highlight(&mut game_state);
         update_ui_card_selection(&mut game_state);
         update_tile_placement(&mut game_state);
+        update_tile_removal(&mut game_state);
         update_train_movement(&mut game_state);
         update_train_animation(&mut game_state);
         update_sim(&mut game_state);
@@ -314,40 +315,46 @@ fn render_ui_overlay(game_state: &GameState) {
             14.0,
             TileType::TrackHorizontal,
             &game_state.texture_ui_card_track_h,
+            game_state.count_track_h,
         ),
         (
             card_x,
             54.0,
             TileType::TrackVertical,
             &game_state.texture_ui_card_track_v,
+            game_state.count_track_v,
         ),
         (
             card_x,
             94.0,
             TileType::TrackCornerUL,
             &game_state.texture_ui_card_track_ul,
+            game_state.count_track_ul,
         ),
         (
             card_x,
             134.0,
             TileType::TrackCornerUR,
             &game_state.texture_ui_card_track_ur,
+            game_state.count_track_ur,
         ),
         (
             card_x,
             174.0,
             TileType::TrackCornerDL,
             &game_state.texture_ui_card_track_dl,
+            game_state.count_track_dl,
         ),
         (
             card_x,
             214.0,
             TileType::TrackCornerDR,
             &game_state.texture_ui_card_track_dr,
+            game_state.count_track_dr,
         ),
     ];
 
-    for (card_x, card_y, tile_type, texture) in &card_positions {
+    for (card_x, card_y, tile_type, texture, count) in &card_positions {
         let screen_x = x_offset + (card_x * zoom as f32);
         let screen_y = y_offset + (card_y * zoom as f32);
 
@@ -377,6 +384,17 @@ fn render_ui_overlay(game_state: &GameState) {
                 );
             }
         }
+
+        // Draw count overlay on bottom-left corner of the card
+        let count_x = screen_x + (2.0 * zoom as f32);
+        let count_y = screen_y + (32.0 * zoom as f32);
+        draw_scaled_text(
+            &count.to_string(),
+            count_x,
+            count_y,
+            12.0 * zoom as f32,
+            &WHITE,
+        );
     }
 }
 
@@ -816,6 +834,12 @@ fn update_ui_card_selection(game_state: &mut GameState) {
             && mouse_screen.1 >= screen_y
             && mouse_screen.1 < screen_y + card_size
         {
+            // Check if we have pieces available
+            let count = game_state.get_track_count(*tile_type);
+            if count <= 0 {
+                return;
+            }
+
             // Toggle selection: deselect if already selected, otherwise select
             if game_state.selected_tile == Some(*tile_type) {
                 game_state.selected_tile = None;
@@ -838,22 +862,78 @@ fn update_tile_placement(game_state: &mut GameState) {
         let tile_pos = game_state.tile_highlighted.unwrap();
         let tile_type = game_state.selected_tile.unwrap();
 
-        // Check if placement is allowed before getting mutable reference
-        let can_place = if let Some(level) = game_state.current_level() {
-            if let Some(existing_tile) = level.tile_layout.get(&tile_pos) {
-                !game_state.is_tile_permanent(*existing_tile)
+        // Check if we have pieces available
+        let count = game_state.get_track_count(tile_type);
+        if count <= 0 {
+            return;
+        }
+
+        // Check if placement is allowed and get existing tile info
+        let (can_place, existing_tile) = if let Some(level) = game_state.current_level() {
+            if let Some(existing) = level.tile_layout.get(&tile_pos) {
+                (!game_state.is_tile_permanent(*existing), Some(*existing))
             } else {
-                true
+                (true, None)
             }
         } else {
-            false
+            (false, None)
         };
 
         if can_place {
+            // Return old piece to pool if replacing
+            if let Some(old_tile) = existing_tile {
+                game_state.increment_track_count(old_tile);
+            }
+
+            // Place new piece
             if let Some(level) = game_state.current_level_mut() {
                 level.tile_layout.insert(tile_pos, tile_type);
             }
+            game_state.decrement_track_count(tile_type);
+
+            // Deselect if we just placed the last piece
+            if game_state.get_track_count(tile_type) <= 0 {
+                game_state.selected_tile = None;
+            }
         }
+    }
+}
+
+fn update_tile_removal(game_state: &mut GameState) {
+    // Right-click to remove placed track pieces
+    if !is_mouse_button_pressed(MouseButton::Right) {
+        return;
+    }
+
+    if game_state.tile_highlighted.is_none() {
+        return;
+    }
+
+    let tile_pos = game_state.tile_highlighted.unwrap();
+
+    // Check if there's a removable tile at this position
+    let tile_to_remove = if let Some(level) = game_state.current_level() {
+        if let Some(tile) = level.tile_layout.get(&tile_pos) {
+            if !game_state.is_tile_permanent(*tile) {
+                Some(*tile)
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+
+    // Remove the tile and return it to the pool
+    if let Some(tile_type) = tile_to_remove {
+        if let Some(level) = game_state.current_level_mut() {
+            level.tile_layout.remove(&tile_pos);
+        }
+        game_state.increment_track_count(tile_type);
+        // Select the removed piece type
+        game_state.selected_tile = Some(tile_type);
     }
 }
 
