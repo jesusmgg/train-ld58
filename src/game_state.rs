@@ -171,6 +171,7 @@ pub struct GameState {
     pub level_22_tunnels_opened: bool, // Whether level 2-2 tunnels have been opened
     pub win_message_shown: bool,       // Whether the win message has been shown
     pub help_message_shown: bool,      // Whether the help message has been shown
+    pub debug_ui_visible: bool,        // Whether debug UI is visible (debug builds only)
 
     // UI
     pub texture_ui_overlay: Texture2D,
@@ -562,6 +563,7 @@ impl GameState {
             level_22_tunnels_opened: false,
             win_message_shown: false,
             help_message_shown: false,
+            debug_ui_visible: true,
 
             texture_ui_overlay,
             texture_ui_card_track_h,

@@ -58,9 +58,10 @@ async fn main() {
         render_garbage_counters(&game_state);
         render_message(&game_state);
         #[cfg(debug_assertions)]
-        render_tile_indices(&game_state);
-        #[cfg(debug_assertions)]
-        render_diagnostics(&game_state);
+        if game_state.debug_ui_visible {
+            render_tile_indices(&game_state);
+            render_diagnostics(&game_state);
+        }
 
         // Late game logic update
         update_win_condition(&mut game_state);
@@ -188,6 +189,11 @@ fn update_debug_controls(game_state: &mut GameState) {
     // E to trigger endgame/win
     if is_key_pressed(KeyCode::E) {
         game_state.game_won = true;
+    }
+
+    // I to toggle debug UI (grid numbers and diagnostics)
+    if is_key_pressed(KeyCode::I) {
+        game_state.debug_ui_visible = !game_state.debug_ui_visible;
     }
 
     // G to reset track pieces to standard amounts
