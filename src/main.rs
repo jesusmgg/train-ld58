@@ -94,6 +94,9 @@ fn update_train_input(game_state: &mut GameState) {
                 TrainDirection::Right
             };
             game_state.train_state = TrainState::Stopped;
+
+            // Reset level
+            game_state.reset_level();
         }
     }
 }

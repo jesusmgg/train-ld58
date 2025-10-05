@@ -1,10 +1,30 @@
-## Graphics pending:
-- Recycling plant.
+## Graphics pending
 - Smoke particles.
+
+## Sound pending
+- Train running
+- Train stop
+- Garbage pickup
+- Garbage dropoff
+- UI hover
+- Card selection
+- Track placement
+- Track removal
+- Win fanfare
+- Tunnel opening (explosion)
+- Music: train stopped
+- Music: train running
 
 ## Pending
 - Garbage collection and tracking.
-- Garbage disposal.
+- Train controls UI. Start train, stop train, reset train.
+- General dropoff counter.
+- Level design.
+- Music.
+- Sound effects.
+- Win UI.
+- Initial logo.
+- Game saving.
 
 ## Bugs
 - Loading screen is not showing.

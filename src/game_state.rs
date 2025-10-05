@@ -643,6 +643,34 @@ impl GameState {
         }
     }
 
+    pub fn reset_level(&mut self) {
+        // Reset garbage_held counter
+        self.garbage_held = 0;
+
+        // Reset all garbage tiles in the current level
+        if let Some(level_idx) = self.level_active {
+            let level = &mut self.levels[level_idx];
+            for y in 0..level.grid_tiles.y {
+                for x in 0..level.grid_tiles.x {
+                    let tile_pos = IVec2::new(x, y);
+                    if let Some(tile_type) = level.tile_layout.get_mut(&tile_pos) {
+                        match tile_type {
+                            TileType::GarbagePickupEmpty => {
+                                *tile_type = TileType::GarbagePickupFull;
+                            }
+                            TileType::GarbageDropoffFull1
+                            | TileType::GarbageDropoffFull2
+                            | TileType::GarbageDropoffFull3 => {
+                                *tile_type = TileType::GarbageDropoffEmpty;
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     fn show_loading_screen(styles: &Styles, font: &Font) {
         clear_background(styles.colors.bg_light);
         let font_size = 16.0;
