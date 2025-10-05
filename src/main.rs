@@ -1066,6 +1066,20 @@ fn update_train_movement(game_state: &mut GameState) {
 
                             // Transition to next level
                             game_state.level_active = Some(next_idx);
+
+                            // Check if this is the first visit to the level
+                            if !game_state.visited_levels[next_idx] {
+                                game_state.visited_levels[next_idx] = true;
+
+                                // Reset track pieces to standard on first visit
+                                game_state.count_track_h = 10;
+                                game_state.count_track_v = 10;
+                                game_state.count_track_ul = 5;
+                                game_state.count_track_ur = 5;
+                                game_state.count_track_dl = 5;
+                                game_state.count_track_dr = 5;
+                            }
+
                             let next_level = &game_state.levels[next_idx];
 
                             // Set camera target to new level
