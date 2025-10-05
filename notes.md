@@ -2,15 +2,17 @@
 - Smoke particles.
 
 ## Sound pending
-- Level transition.
-- Train running
-- Train stop
+- Level transition
 - Garbage pickup
 - Garbage dropoff
-- UI hover
-- Card selection
 - Track placement
 - Track removal
+- UI hover
+- Card selection
+- Help dialog
+
+- Train running
+- Train stop
 - Win fanfare
 - Tunnel opening (explosion)
 - Music: train stopped

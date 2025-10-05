@@ -107,6 +107,16 @@ fn update_train_input(game_state: &mut GameState) {
 
             // Reset level
             game_state.reset_level();
+
+            // Play reset sound
+            use macroquad::audio::{play_sound, PlaySoundParams};
+            play_sound(
+                &game_state.sfx_ui_dialog_open,
+                PlaySoundParams {
+                    looped: false,
+                    volume: 0.4,
+                },
+            );
         }
     }
 }
@@ -145,6 +155,16 @@ fn update_debug_controls(game_state: &mut GameState) {
     // M to test message display
     if is_key_pressed(KeyCode::M) {
         game_state.message = Some("Test message!".to_string());
+
+        // Play dialog sound
+        use macroquad::audio::{play_sound, PlaySoundParams};
+        play_sound(
+            &game_state.sfx_ui_dialog_open,
+            PlaySoundParams {
+                looped: false,
+                volume: 0.4,
+            },
+        );
     }
 
     // Q to add 1 garbage
@@ -996,6 +1016,17 @@ fn update_train_movement(game_state: &mut GameState) {
                                         "Fill at least one recycling center! <R> to reset train."
                                             .to_string(),
                                     );
+
+                                    // Play dialog sound
+                                    use macroquad::audio::{play_sound, PlaySoundParams};
+                                    play_sound(
+                                        &game_state.sfx_ui_dialog_open,
+                                        PlaySoundParams {
+                                            looped: false,
+                                            volume: 0.4,
+                                        },
+                                    );
+
                                     return;
                                 }
                             }
@@ -1248,6 +1279,17 @@ fn check_garbage_pickup(game_state: &mut GameState) {
     };
 
     // Pick up garbage and mark as empty
+    if !garbage_positions.is_empty() {
+        use macroquad::audio::{play_sound, PlaySoundParams};
+        play_sound(
+            &game_state.sfx_garbage_pickup,
+            PlaySoundParams {
+                looped: false,
+                volume: 0.6,
+            },
+        );
+    }
+
     for pos in garbage_positions {
         if let Some(level) = game_state.current_level_mut() {
             level.tile_layout.insert(pos, TileType::GarbagePickupEmpty);
@@ -1297,6 +1339,10 @@ fn check_garbage_dropoff(game_state: &mut GameState) {
         Vec::new()
     };
 
+    // Track sound to play (priority for full disposal)
+    let mut any_full = false;
+    let mut any_dropoff = false;
+
     // Drop off garbage at each available site
     for (pos, current_state) in dropoff_positions {
         if game_state.garbage_held <= 0 {
@@ -1327,9 +1373,37 @@ fn check_garbage_dropoff(game_state: &mut GameState) {
             _ => continue,
         };
 
+        // Track if any site became full
+        if new_fullness == 3 {
+            any_full = true;
+        }
+        any_dropoff = true;
+
         if let Some(level) = game_state.current_level_mut() {
             level.tile_layout.insert(pos, new_state);
             game_state.garbage_held -= amount_to_drop;
+        }
+    }
+
+    // Play sound effect once based on priority
+    if any_dropoff {
+        use macroquad::audio::{play_sound, PlaySoundParams};
+        if any_full {
+            play_sound(
+                &game_state.sfx_garbage_dispose_full,
+                PlaySoundParams {
+                    looped: false,
+                    volume: 0.5,
+                },
+            );
+        } else {
+            play_sound(
+                &game_state.sfx_garbage_dispose_partial,
+                PlaySoundParams {
+                    looped: false,
+                    volume: 0.5,
+                },
+            );
         }
     }
 
@@ -1390,6 +1464,17 @@ fn update_level_22_tunnels(game_state: &mut GameState) {
                         }
                     }
 
+                    // Play explosion sound and dialog sound
+                    use macroquad::audio::{play_sound, play_sound_once, PlaySoundParams};
+                    play_sound_once(&game_state.sfx_explosion);
+                    play_sound(
+                        &game_state.sfx_ui_dialog_open,
+                        PlaySoundParams {
+                            looped: false,
+                            volume: 0.4,
+                        },
+                    );
+
                     // Show message to player
                     game_state.message = Some("All tunnels are now open!".to_string());
                 }
@@ -1405,10 +1490,30 @@ fn update_help_message(game_state: &mut GameState) {
     if !game_state.help_message_shown {
         game_state.help_message_shown = true;
         game_state.message = help_msg;
+
+        // Play dialog sound
+        use macroquad::audio::{play_sound, PlaySoundParams};
+        play_sound(
+            &game_state.sfx_ui_dialog_open,
+            PlaySoundParams {
+                looped: false,
+                volume: 0.4,
+            },
+        );
     }
     // Show help message when H is pressed
     else if is_key_pressed(KeyCode::H) {
         game_state.message = help_msg;
+
+        // Play dialog sound
+        use macroquad::audio::{play_sound, PlaySoundParams};
+        play_sound(
+            &game_state.sfx_ui_dialog_open,
+            PlaySoundParams {
+                looped: false,
+                volume: 0.4,
+            },
+        );
     }
 }
 
@@ -1489,6 +1594,16 @@ fn update_win_condition(game_state: &mut GameState) {
         game_state.win_message_shown = true;
         game_state.message =
             Some("Congratulations! You've filled all recycling centers!".to_string());
+
+        // Play dialog sound
+        use macroquad::audio::{play_sound, PlaySoundParams};
+        play_sound(
+            &game_state.sfx_ui_dialog_open,
+            PlaySoundParams {
+                looped: false,
+                volume: 0.4,
+            },
+        );
     }
 }
 
@@ -1573,6 +1688,16 @@ fn update_ui_card_selection(game_state: &mut GameState) {
                 return;
             }
 
+            // Play selection sound
+            use macroquad::audio::{play_sound, PlaySoundParams};
+            play_sound(
+                &game_state.sfx_ui_selection,
+                PlaySoundParams {
+                    looped: false,
+                    volume: 0.4,
+                },
+            );
+
             // Toggle selection: deselect if already selected, otherwise select
             if game_state.selected_tile == Some(*tile_type) {
                 game_state.selected_tile = None;
@@ -1624,6 +1749,16 @@ fn update_tile_placement(game_state: &mut GameState) {
             }
             game_state.decrement_track_count(tile_type);
 
+            // Play placement sound
+            use macroquad::audio::{play_sound, PlaySoundParams};
+            play_sound(
+                &game_state.sfx_track_place,
+                PlaySoundParams {
+                    looped: false,
+                    volume: 0.3,
+                },
+            );
+
             // Deselect if we just placed the last piece
             if game_state.get_track_count(tile_type) <= 0 {
                 game_state.selected_tile = None;
@@ -1665,6 +1800,17 @@ fn update_tile_removal(game_state: &mut GameState) {
             level.tile_layout.remove(&tile_pos);
         }
         game_state.increment_track_count(tile_type);
+
+        // Play removal sound
+        use macroquad::audio::{play_sound, PlaySoundParams};
+        play_sound(
+            &game_state.sfx_track_remove,
+            PlaySoundParams {
+                looped: false,
+                volume: 0.3,
+            },
+        );
+
         // Select the removed piece type
         game_state.selected_tile = Some(tile_type);
     }
