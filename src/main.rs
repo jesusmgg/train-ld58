@@ -151,32 +151,39 @@ fn update_debug_controls(game_state: &mut GameState) {
         game_state.count_track_dr = 50;
     }
 
+    // Y to toggle skip level requirements
+    if is_key_pressed(KeyCode::Y) {
+        game_state.skip_level_requirements = !game_state.skip_level_requirements;
+    }
+
     let new_idx = (grid_y * 3 + grid_x) as usize;
 
     if new_idx != active_idx {
-        // Check if current level has at least one full dropoff
-        let current_level = &game_state.levels[active_idx];
-        let has_full_dropoff = current_level
-            .tile_layout
-            .values()
-            .any(|tile| matches!(tile, TileType::GarbageDropoffFull3));
+        // Check if current level has at least one full dropoff (unless skipping requirements)
+        if !game_state.skip_level_requirements {
+            let current_level = &game_state.levels[active_idx];
+            let has_full_dropoff = current_level
+                .tile_layout
+                .values()
+                .any(|tile| matches!(tile, TileType::GarbageDropoffFull3));
 
-        if !has_full_dropoff {
-            // Check if current level has any dropoffs at all
-            let has_dropoffs = current_level.tile_layout.values().any(|tile| {
-                matches!(
-                    tile,
-                    TileType::GarbageDropoffEmpty
-                        | TileType::GarbageDropoffFull1
-                        | TileType::GarbageDropoffFull2
-                        | TileType::GarbageDropoffFull3
-                )
-            });
+            if !has_full_dropoff {
+                // Check if current level has any dropoffs at all
+                let has_dropoffs = current_level.tile_layout.values().any(|tile| {
+                    matches!(
+                        tile,
+                        TileType::GarbageDropoffEmpty
+                            | TileType::GarbageDropoffFull1
+                            | TileType::GarbageDropoffFull2
+                            | TileType::GarbageDropoffFull3
+                    )
+                });
 
-            if has_dropoffs {
-                game_state.message =
-                    Some("Fill at least one recycling center! <R> to reset train.".to_string());
-                return;
+                if has_dropoffs {
+                    game_state.message =
+                        Some("Fill at least one recycling center! <R> to reset train.".to_string());
+                    return;
+                }
             }
         }
         game_state.level_active = Some(new_idx);
@@ -632,6 +639,15 @@ fn render_diagnostics(game_state: &GameState) {
     y += 24.0;
     draw_scaled_text(
         format!("Game won: {}", &game_state.game_won).as_str(),
+        x,
+        y,
+        font_size,
+        &color,
+        &game_state.font,
+    );
+    y += 24.0;
+    draw_scaled_text(
+        format!("Skip requirements: {}", &game_state.skip_level_requirements).as_str(),
         x,
         y,
         font_size,

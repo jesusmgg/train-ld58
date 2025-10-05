@@ -166,6 +166,7 @@ pub struct GameState {
     pub dropoffs_full_count: i32,   // Number of dropoff sites at Full3 (3/3) state
     pub game_won: bool,             // True when all dropoffs are full
     pub message: Option<String>,    // Message to display in center of screen
+    pub skip_level_requirements: bool, // Debug: skip level completion requirements
 
     // UI
     pub texture_ui_overlay: Texture2D,
@@ -501,6 +502,7 @@ impl GameState {
             dropoffs_full_count: 0,
             game_won: false,
             message: None,
+            skip_level_requirements: false,
 
             texture_ui_overlay,
             texture_ui_card_track_h,
