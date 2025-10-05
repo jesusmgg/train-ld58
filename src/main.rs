@@ -35,6 +35,7 @@ async fn main() {
         check_garbage_dropoff(&mut game_state);
         update_train_animation(&mut game_state);
         update_sim(&mut game_state);
+        update_level_22_tunnels(&mut game_state);
         update_camera(&mut game_state);
 
         // Render
@@ -862,6 +863,24 @@ fn render_diagnostics(game_state: &GameState) {
         &color,
         &game_state.font,
     );
+    y += 24.0;
+    // Count remaining trash across all levels
+    let mut remaining_trash = 0;
+    for level in &game_state.levels {
+        for tile_type in level.tile_layout.values() {
+            if matches!(tile_type, TileType::GarbagePickupFull) {
+                remaining_trash += 1;
+            }
+        }
+    }
+    draw_scaled_text(
+        format!("Remaining trash: {}", remaining_trash).as_str(),
+        x,
+        y,
+        font_size,
+        &color,
+        &game_state.font,
+    );
 }
 
 fn update_train_movement(game_state: &mut GameState) {
@@ -1328,6 +1347,44 @@ fn update_train_animation(game_state: &mut GameState) {
 }
 
 fn update_sim(game_state: &mut GameState) {}
+
+fn update_level_22_tunnels(game_state: &mut GameState) {
+    // Check if we're on level 2-2 (index 4) and haven't opened tunnels yet
+    if let Some(level_idx) = game_state.level_active {
+        if level_idx == 4 && !game_state.level_22_tunnels_opened {
+            // Start the timer if it hasn't been started yet
+            if game_state.level_22_tunnel_timer.is_none() {
+                game_state.level_22_tunnel_timer = Some(0.0);
+            }
+
+            // Update the timer
+            if let Some(timer) = &mut game_state.level_22_tunnel_timer {
+                *timer += get_frame_time();
+
+                // After 5 seconds, open all tunnels
+                if *timer >= 5.0 {
+                    game_state.level_22_tunnels_opened = true;
+
+                    // Open all tunnels on every level
+                    for level in &mut game_state.levels {
+                        for (_pos, tile_type) in level.tile_layout.iter_mut() {
+                            match tile_type {
+                                TileType::TunnelUpClosed => *tile_type = TileType::TunnelUpOpen,
+                                TileType::TunnelDownClosed => *tile_type = TileType::TunnelDownOpen,
+                                TileType::TunnelLeftClosed => *tile_type = TileType::TunnelLeftOpen,
+                                TileType::TunnelRightClosed => *tile_type = TileType::TunnelRightOpen,
+                                _ => {}
+                            }
+                        }
+                    }
+
+                    // Show message to player
+                    game_state.message = Some("All tunnels are now open!".to_string());
+                }
+            }
+        }
+    }
+}
 
 fn update_win_condition(game_state: &mut GameState) {}
 
