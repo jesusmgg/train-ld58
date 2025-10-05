@@ -4,8 +4,8 @@
 - Smoke particles.
 
 ## Pending
-- Track layout UI.
-- Limited track piece availability.
+- Garbage collection and tracking.
+- Garbage disposal.
 
 ## Bugs
 - Loading screen is not showing.
