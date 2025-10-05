@@ -87,7 +87,11 @@ fn update_train_input(game_state: &mut GameState) {
             // Copy values before modifying state
             let w = level.grid_tiles.x;
             let h = level.grid_tiles.y;
-            let start = level.default_train_start;
+
+            // Use entry tunnel if available, otherwise default start
+            let start = game_state
+                .train_entry_tunnel
+                .unwrap_or(level.default_train_start);
 
             game_state.train_tile_pos = start;
             game_state.train_pos_offset = f32::Vec2::ZERO;
@@ -251,6 +255,7 @@ fn update_debug_controls(game_state: &mut GameState) {
 
             // Update train position to new level's default start
             game_state.train_tile_pos = new_level.default_train_start;
+            game_state.train_entry_tunnel = Some(new_level.default_train_start);
 
             // Update train direction based on tunnel position
             let w = new_level.grid_tiles.x;
@@ -332,6 +337,7 @@ fn update_debug_controls(game_state: &mut GameState) {
 
         // Update train position to new level's default start
         game_state.train_tile_pos = new_level.default_train_start;
+        game_state.train_entry_tunnel = Some(new_level.default_train_start);
 
         // Update train direction based on tunnel position
         let w = new_level.grid_tiles.x;
@@ -1107,6 +1113,7 @@ fn update_train_movement(game_state: &mut GameState) {
                             // Position train at arrival tunnel with offset zero
                             game_state.train_tile_pos = arrival_pos;
                             game_state.train_pos_offset = f32::Vec2::ZERO;
+                            game_state.train_entry_tunnel = Some(arrival_pos);
 
                             // Keep direction (train continues in same direction)
                             // Train state remains Running

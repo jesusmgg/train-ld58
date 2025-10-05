@@ -158,6 +158,7 @@ pub struct GameState {
     pub train_pos_offset: f32::Vec2, // Smooth position offset from tile position (0.0 to 1.0)
     pub train_direction: TrainDirection,
     pub train_state: TrainState,
+    pub train_entry_tunnel: Option<IVec2>, // Tunnel position where train entered current level
     pub train_anim_frame: u8,          // 0 or 1 for the two animation frames
     pub train_anim_timer: f32,         // Timer for animation
     pub garbage_held: i32,             // Amount of garbage currently on the train
@@ -550,6 +551,7 @@ impl GameState {
             train_pos_offset,
             train_direction,
             train_state,
+            train_entry_tunnel: Some(train_tile_pos),
             train_anim_frame: 0,
             train_anim_timer: 0.0,
             garbage_held: 0,
