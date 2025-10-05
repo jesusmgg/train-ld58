@@ -1,5 +1,7 @@
-LD 58 game
+Clean Line
 ===
+
+Game made for the Ludum Dare 58 Compo.
 
 Description will go here.
 

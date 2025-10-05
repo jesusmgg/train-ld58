@@ -8,7 +8,7 @@ use game_state::{GameState, TileType, TrainDirection, TrainState};
 use macroquad::{math::Rect, prelude::*};
 use text::draw_scaled_text;
 
-#[macroquad::main("ld-58")]
+#[macroquad::main("Clean Line")]
 async fn main() {
     configure();
 
@@ -1523,7 +1523,7 @@ fn update_level_22_tunnels(game_state: &mut GameState) {
 }
 
 fn update_help_message(game_state: &mut GameState) {
-    let help_msg = Some("Build railroads, collect garbage and take it to\nthe recycling centers.\n\nStart/stop the train with <Space>.\n\nReset the current level with <R>.".to_string());
+    let help_msg = Some("Build railroads, collect garbage, and take it to\nthe recycling centers.\n\nStart/stop the train with <Space>.\n\nReset the current level with <R>.".to_string());
 
     // Show help message at the start of the game
     if !game_state.help_message_shown {
