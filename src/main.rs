@@ -5,11 +5,7 @@ mod text;
 
 use constants::*;
 use game_state::{GameState, TileType, TrainDirection, TrainState};
-use macroquad::{
-    audio::{play_sound, play_sound_once, stop_sound, PlaySoundParams},
-    math::Rect,
-    prelude::*,
-};
+use macroquad::{math::Rect, prelude::*};
 use text::draw_scaled_text;
 
 #[macroquad::main("ld-58")]
@@ -150,6 +146,9 @@ fn update_current_level(game_state: &mut GameState) {
         } else {
             TrainDirection::Right // Default
         };
+
+        game_state.train_pos_offset = f32::Vec2::ZERO;
+        game_state.train_state = TrainState::Stopped;
     }
 }
 
@@ -581,7 +580,11 @@ fn update_train_animation(game_state: &mut GameState) {
     // Switch frames
     if game_state.train_anim_timer >= TRAIN_ANIM_SPEED {
         game_state.train_anim_timer = 0.0;
-        game_state.train_anim_frame = if game_state.train_anim_frame == 0 { 1 } else { 0 };
+        game_state.train_anim_frame = if game_state.train_anim_frame == 0 {
+            1
+        } else {
+            0
+        };
     }
 }
 

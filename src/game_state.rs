@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
 use macroquad::{
-    audio::{load_sound, Sound},
+    audio::load_sound,
     camera::{set_camera, Camera2D},
-    math::{f32, IVec2, Rect},
+    math::{f32, IVec2},
     shapes::draw_rectangle,
     texture::{load_texture, Texture2D},
     window::{clear_background, screen_height, screen_width},
@@ -40,7 +40,6 @@ pub enum TileType {
 
     // Obstacles
     Rock,
-    Water,
 
     // Garbage system
     GarbagePickup,
@@ -130,7 +129,7 @@ pub struct GameState {
     pub train_pos_offset: f32::Vec2, // Smooth position offset from tile position (0.0 to 1.0)
     pub train_direction: TrainDirection,
     pub train_state: TrainState,
-    pub train_anim_frame: u8, // 0 or 1 for the two animation frames
+    pub train_anim_frame: u8,  // 0 or 1 for the two animation frames
     pub train_anim_timer: f32, // Timer for animation
 }
 
@@ -1120,7 +1119,6 @@ pub struct Level {
     pub grid_tiles: IVec2,
     pub pos_world: f32::Vec2,
 
-    pub is_setup: bool,
     pub tile_layout: HashMap<IVec2, TileType>,
     pub default_train_start: IVec2, // Grid tile position where train starts by default
 }
@@ -1132,7 +1130,6 @@ impl Level {
         pos_world: f32::Vec2,
         default_train_start: IVec2,
     ) -> Self {
-        let is_setup = false;
         let tile_layout = HashMap::new();
 
         Self {
@@ -1140,7 +1137,6 @@ impl Level {
             grid_tiles,
             pos_world,
 
-            is_setup,
             tile_layout,
             default_train_start,
         }
@@ -1160,9 +1156,5 @@ impl Level {
             (SCREEN_W - grid_size_px.x) / 2.0,
             (SCREEN_H - grid_size_px.y) / 2.0,
         )
-    }
-
-    pub fn reset(&mut self) {
-        self.is_setup = false;
     }
 }
