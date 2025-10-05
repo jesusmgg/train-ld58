@@ -5,11 +5,11 @@
 
 ## Pending
 - Track layout UI.
-- Inter-level train movement.
+- Limited track piece availability.
 
 ## Bugs
 - Loading screen is not showing.
 - Tile highlight should only be active when the level is fully in camera view.
-- View is not centered after resizing window.
+- Game scale gets small with certain window sizes.
 
 ## Future improvements

@@ -139,6 +139,16 @@ pub struct GameState {
     pub train_state: TrainState,
     pub train_anim_frame: u8,  // 0 or 1 for the two animation frames
     pub train_anim_timer: f32, // Timer for animation
+
+    // UI
+    pub texture_ui_overlay: Texture2D,
+    pub texture_ui_card_track_h: Texture2D,
+    pub texture_ui_card_track_v: Texture2D,
+    pub texture_ui_card_track_ul: Texture2D,
+    pub texture_ui_card_track_ur: Texture2D,
+    pub texture_ui_card_track_dl: Texture2D,
+    pub texture_ui_card_track_dr: Texture2D,
+    pub texture_ui_card_selection: Texture2D,
 }
 
 impl GameState {
@@ -311,6 +321,32 @@ impl GameState {
             .await
             .unwrap();
 
+        // UI
+        let texture_ui_overlay = load_texture("assets/sprites/ui_overlay.png")
+            .await
+            .unwrap();
+        let texture_ui_card_track_h = load_texture("assets/sprites/ui_card_track_h.png")
+            .await
+            .unwrap();
+        let texture_ui_card_track_v = load_texture("assets/sprites/ui_card_track_v.png")
+            .await
+            .unwrap();
+        let texture_ui_card_track_ul = load_texture("assets/sprites/ui_card_track_ul.png")
+            .await
+            .unwrap();
+        let texture_ui_card_track_ur = load_texture("assets/sprites/ui_card_track_ur.png")
+            .await
+            .unwrap();
+        let texture_ui_card_track_dl = load_texture("assets/sprites/ui_card_track_dl.png")
+            .await
+            .unwrap();
+        let texture_ui_card_track_dr = load_texture("assets/sprites/ui_card_track_dr.png")
+            .await
+            .unwrap();
+        let texture_ui_card_selection = load_texture("assets/sprites/ui_card_selection.png")
+            .await
+            .unwrap();
+
         let sfx_hover_01 = load_sound("assets/sfx/hover_02.ogg").await.unwrap();
         let sfx_explosion_01 = load_sound("assets/sfx/explosion_01.ogg").await.unwrap();
         let sfx_level_start_01 = load_sound("assets/sfx/level_start_01.ogg").await.unwrap();
@@ -380,6 +416,15 @@ impl GameState {
             train_state,
             train_anim_frame: 0,
             train_anim_timer: 0.0,
+
+            texture_ui_overlay,
+            texture_ui_card_track_h,
+            texture_ui_card_track_v,
+            texture_ui_card_track_ul,
+            texture_ui_card_track_ur,
+            texture_ui_card_track_dl,
+            texture_ui_card_track_dr,
+            texture_ui_card_selection,
         }
     }
 
@@ -490,7 +535,7 @@ impl GameState {
 
     pub fn create_levels() -> Vec<Level> {
         let mut levels = Vec::with_capacity(9);
-        let grid_size = IVec2::new(12, 7);
+        let grid_size = IVec2::new(10, 7);
         let w = grid_size.x;
         let h = grid_size.y;
 

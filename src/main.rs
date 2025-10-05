@@ -24,7 +24,7 @@ async fn main() {
         // Game logic update
         update_current_level(&mut game_state);
         update_tile_highlight(&mut game_state);
-        update_tile_selection(&mut game_state);
+        update_ui_card_selection(&mut game_state);
         update_tile_placement(&mut game_state);
         update_train_movement(&mut game_state);
         update_train_animation(&mut game_state);
@@ -45,6 +45,7 @@ async fn main() {
 
         // UI
         set_default_camera();
+        render_ui_overlay(&game_state);
         #[cfg(debug_assertions)]
         render_diagnostics(&game_state);
 
@@ -280,10 +281,109 @@ fn render_tile_highlight(game_state: &GameState) {
     }
 }
 
+fn render_ui_overlay(game_state: &GameState) {
+    // Calculate integer zoom factor for pixel perfect rendering (same as camera)
+    let zoom = ((screen_width() as i32 / SCREEN_W as i32)
+        .min(screen_height() as i32 / SCREEN_H as i32)) as i32;
+
+    let zoomed_w = (SCREEN_W as i32) * zoom;
+    let zoomed_h = (SCREEN_H as i32) * zoom;
+
+    // Center on screen
+    let x_offset = ((screen_width() as i32 - zoomed_w) / 2) as f32;
+    let y_offset = ((screen_height() as i32 - zoomed_h) / 2) as f32;
+
+    // Draw overlay
+    draw_texture_ex(
+        &game_state.texture_ui_overlay,
+        x_offset,
+        y_offset,
+        WHITE,
+        DrawTextureParams {
+            dest_size: Some(Vec2::new(zoomed_w as f32, zoomed_h as f32)),
+            ..Default::default()
+        },
+    );
+
+    let card_x = 14.0;
+
+    // Draw track cards on left panel (single column)
+    let card_positions = [
+        (
+            card_x,
+            14.0,
+            TileType::TrackHorizontal,
+            &game_state.texture_ui_card_track_h,
+        ),
+        (
+            card_x,
+            54.0,
+            TileType::TrackVertical,
+            &game_state.texture_ui_card_track_v,
+        ),
+        (
+            card_x,
+            94.0,
+            TileType::TrackCornerUL,
+            &game_state.texture_ui_card_track_ul,
+        ),
+        (
+            card_x,
+            134.0,
+            TileType::TrackCornerUR,
+            &game_state.texture_ui_card_track_ur,
+        ),
+        (
+            card_x,
+            174.0,
+            TileType::TrackCornerDL,
+            &game_state.texture_ui_card_track_dl,
+        ),
+        (
+            card_x,
+            214.0,
+            TileType::TrackCornerDR,
+            &game_state.texture_ui_card_track_dr,
+        ),
+    ];
+
+    for (card_x, card_y, tile_type, texture) in &card_positions {
+        let screen_x = x_offset + (card_x * zoom as f32);
+        let screen_y = y_offset + (card_y * zoom as f32);
+
+        draw_texture_ex(
+            texture,
+            screen_x,
+            screen_y,
+            WHITE,
+            DrawTextureParams {
+                dest_size: Some(Vec2::new(36.0 * zoom as f32, 36.0 * zoom as f32)),
+                ..Default::default()
+            },
+        );
+
+        // Draw selection indicator on selected card
+        if let Some(selected) = game_state.selected_tile {
+            if selected == *tile_type {
+                draw_texture_ex(
+                    &game_state.texture_ui_card_selection,
+                    screen_x - 6.0,
+                    screen_y - 6.0,
+                    WHITE,
+                    DrawTextureParams {
+                        dest_size: Some(Vec2::new(40.0 * zoom as f32, 40.0 * zoom as f32)),
+                        ..Default::default()
+                    },
+                );
+            }
+        }
+    }
+}
+
 fn render_diagnostics(game_state: &GameState) {
     let font_size = 32.0;
     let color = WHITE;
-    let x = 16.0;
+    let x = 720.0;
     let mut y = 32.0;
 
     draw_scaled_text(
@@ -309,18 +409,6 @@ fn render_diagnostics(game_state: &GameState) {
         format!(
             "Level: {} (index {})",
             &current_level_name, &current_level_idx
-        )
-        .as_str(),
-        x,
-        y,
-        font_size,
-        &color,
-    );
-    y += 24.0;
-    draw_scaled_text(
-        format!(
-            "Camera tgt: {}, {}",
-            &game_state.camera.target.x, &game_state.camera.target.y
         )
         .as_str(),
         x,
@@ -654,6 +742,19 @@ fn update_sim(game_state: &mut GameState) {}
 fn update_win_condition(game_state: &mut GameState) {}
 
 fn update_camera(game_state: &mut GameState) {
+    // Recalculate viewport for current window size
+    let zoom = ((screen_width() as i32 / SCREEN_W as i32)
+        .min(screen_height() as i32 / SCREEN_H as i32)) as i32;
+
+    let zoomed_w = (SCREEN_W as i32) * zoom;
+    let zoomed_h = (SCREEN_H as i32) * zoom;
+
+    // Center viewport on screen
+    let x_offset = (screen_width() as i32 - zoomed_w) / 2;
+    let y_offset = (screen_height() as i32 - zoomed_h) / 2;
+
+    game_state.camera.viewport = Some((x_offset, y_offset, zoomed_w, zoomed_h));
+
     // Lerp camera towards target position with easing
     let diff = game_state.camera_target_pos - game_state.camera.target;
     let distance = diff.length();
@@ -673,25 +774,56 @@ fn update_camera(game_state: &mut GameState) {
     }
 }
 
-fn update_tile_selection(game_state: &mut GameState) {
-    // Keys 1-6 select track pieces
-    if is_key_pressed(KeyCode::Key1) {
-        game_state.selected_tile = Some(TileType::TrackHorizontal);
+fn update_ui_card_selection(game_state: &mut GameState) {
+    if !is_mouse_button_pressed(MouseButton::Left) {
+        return;
     }
-    if is_key_pressed(KeyCode::Key2) {
-        game_state.selected_tile = Some(TileType::TrackVertical);
-    }
-    if is_key_pressed(KeyCode::Key3) {
-        game_state.selected_tile = Some(TileType::TrackCornerUL);
-    }
-    if is_key_pressed(KeyCode::Key4) {
-        game_state.selected_tile = Some(TileType::TrackCornerUR);
-    }
-    if is_key_pressed(KeyCode::Key5) {
-        game_state.selected_tile = Some(TileType::TrackCornerDL);
-    }
-    if is_key_pressed(KeyCode::Key6) {
-        game_state.selected_tile = Some(TileType::TrackCornerDR);
+
+    // Get screen-space mouse position
+    let mouse_screen = mouse_position();
+
+    // Calculate UI overlay position (same as render_ui_overlay)
+    let zoom = ((screen_width() as i32 / SCREEN_W as i32)
+        .min(screen_height() as i32 / SCREEN_H as i32)) as i32;
+
+    let zoomed_w = (SCREEN_W as i32) * zoom;
+    let zoomed_h = (SCREEN_H as i32) * zoom;
+
+    let x_offset = ((screen_width() as i32 - zoomed_w) / 2) as f32;
+    let y_offset = ((screen_height() as i32 - zoomed_h) / 2) as f32;
+
+    let card_x = 14.0;
+
+    // Card positions (same as render_ui_overlay)
+    let card_positions = [
+        (card_x, 14.0, TileType::TrackHorizontal),
+        (card_x, 54.0, TileType::TrackVertical),
+        (card_x, 94.0, TileType::TrackCornerUL),
+        (card_x, 134.0, TileType::TrackCornerUR),
+        (card_x, 174.0, TileType::TrackCornerDL),
+        (card_x, 214.0, TileType::TrackCornerDR),
+    ];
+
+    let card_size = 36.0 * zoom as f32;
+
+    // Check if mouse is over any card
+    for (card_x, card_y, tile_type) in &card_positions {
+        let screen_x = x_offset + (card_x * zoom as f32);
+        let screen_y = y_offset + (card_y * zoom as f32);
+
+        if mouse_screen.0 >= screen_x
+            && mouse_screen.0 < screen_x + card_size
+            && mouse_screen.1 >= screen_y
+            && mouse_screen.1 < screen_y + card_size
+        {
+            // Toggle selection: deselect if already selected, otherwise select
+            if game_state.selected_tile == Some(*tile_type) {
+                game_state.selected_tile = None;
+            } else {
+                game_state.selected_tile = Some(*tile_type);
+            }
+            return;
+        }
     }
 }
 
