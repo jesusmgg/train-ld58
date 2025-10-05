@@ -56,6 +56,8 @@ async fn main() {
         render_garbage_counters(&game_state);
         render_message(&game_state);
         #[cfg(debug_assertions)]
+        render_tile_indices(&game_state);
+        #[cfg(debug_assertions)]
         render_diagnostics(&game_state);
 
         // Late game logic update
@@ -165,6 +167,76 @@ fn update_debug_controls(game_state: &mut GameState) {
         game_state.count_track_ur = 5;
         game_state.count_track_dl = 5;
         game_state.count_track_dr = 5;
+    }
+
+    // Number keys 0-8 to jump to level and reset pieces
+    let jump_to_level = if is_key_pressed(KeyCode::Key0) {
+        Some(0)
+    } else if is_key_pressed(KeyCode::Key1) {
+        Some(1)
+    } else if is_key_pressed(KeyCode::Key2) {
+        Some(2)
+    } else if is_key_pressed(KeyCode::Key3) {
+        Some(3)
+    } else if is_key_pressed(KeyCode::Key4) {
+        Some(4)
+    } else if is_key_pressed(KeyCode::Key5) {
+        Some(5)
+    } else if is_key_pressed(KeyCode::Key6) {
+        Some(6)
+    } else if is_key_pressed(KeyCode::Key7) {
+        Some(7)
+    } else if is_key_pressed(KeyCode::Key8) {
+        Some(8)
+    } else {
+        None
+    };
+
+    if let Some(level_idx) = jump_to_level {
+        if level_idx < game_state.levels.len() {
+            // Reset pieces to default
+            game_state.count_track_h = 10;
+            game_state.count_track_v = 10;
+            game_state.count_track_ul = 5;
+            game_state.count_track_ur = 5;
+            game_state.count_track_dl = 5;
+            game_state.count_track_dr = 5;
+
+            // Jump to level
+            game_state.level_active = Some(level_idx);
+            let new_level = &game_state.levels[level_idx];
+
+            // Set camera target to new level center
+            game_state.camera_target_pos = f32::vec2(
+                new_level.pos_world.x + SCREEN_W / 2.0,
+                new_level.pos_world.y + SCREEN_H / 2.0,
+            );
+
+            // Update train position to new level's default start
+            game_state.train_tile_pos = new_level.default_train_start;
+
+            // Update train direction based on tunnel position
+            let w = new_level.grid_tiles.x;
+            let h = new_level.grid_tiles.y;
+            let start = new_level.default_train_start;
+
+            game_state.train_direction = if start.x == -1 {
+                TrainDirection::Right
+            } else if start.x == w {
+                TrainDirection::Left
+            } else if start.y == -1 {
+                TrainDirection::Down
+            } else if start.y == h {
+                TrainDirection::Up
+            } else {
+                TrainDirection::Right
+            };
+
+            game_state.train_pos_offset = f32::Vec2::ZERO;
+            game_state.train_state = TrainState::Stopped;
+
+            return;
+        }
     }
 
     let new_idx = (grid_y * 3 + grid_x) as usize;
@@ -363,7 +435,8 @@ fn update_tile_highlight_position(game_state: &mut GameState) {
         let delta = get_frame_time();
         let t = 1.0 - (1.0 - TILE_HIGHLIGHT_LERP_SPEED * delta).max(0.0);
 
-        game_state.tile_highlight_pos = game_state.tile_highlight_pos + (target - game_state.tile_highlight_pos) * t;
+        game_state.tile_highlight_pos =
+            game_state.tile_highlight_pos + (target - game_state.tile_highlight_pos) * t;
     }
 }
 
@@ -625,6 +698,56 @@ fn render_message(game_state: &GameState) {
             &game_state.styles.colors.brown_3,
             &game_state.font,
         );
+    }
+}
+
+fn render_tile_indices(game_state: &GameState) {
+    if let Some(level) = game_state.current_level() {
+        // Calculate screen space parameters
+        let zoom = ((screen_width() as i32 / SCREEN_W as i32)
+            .min(screen_height() as i32 / SCREEN_H as i32)) as f32;
+
+        let zoomed_w = SCREEN_W * zoom;
+        let zoomed_h = SCREEN_H * zoom;
+
+        let x_offset = (screen_width() - zoomed_w) / 2.0;
+        let y_offset = (screen_height() - zoomed_h) / 2.0;
+
+        // Convert world positions to screen positions
+        let camera = &game_state.camera;
+        let camera_offset_x = camera.target.x - SCREEN_W / 2.0;
+        let camera_offset_y = camera.target.y - SCREEN_H / 2.0;
+
+        let grid_offset = level.grid_offset();
+        let grid_origin = level.pos_world + grid_offset;
+
+        for y in 0..level.grid_tiles.y {
+            for x in 0..level.grid_tiles.x {
+                // World position
+                let world_x = grid_origin.x + (x as f32 * TILE_SIZE_X);
+                let world_y = grid_origin.y + (y as f32 * TILE_SIZE_Y);
+
+                // Screen position
+                let screen_x = x_offset + ((world_x - camera_offset_x) * zoom);
+                let screen_y = y_offset + ((world_y - camera_offset_y) * zoom);
+
+                // Flip Y coordinate for display (coordinate system is inverted)
+                let display_y = level.grid_tiles.y - 1 - y;
+                let text = format!("{},{}", x, display_y);
+                let font_size = 16.0 * zoom;
+                let mut color = WHITE;
+                color.a = 0.3;
+
+                draw_scaled_text(
+                    &text,
+                    screen_x + 2.0,
+                    screen_y + 16.0,
+                    font_size,
+                    &color,
+                    &game_state.font,
+                );
+            }
+        }
     }
 }
 

@@ -160,15 +160,15 @@ pub struct GameState {
     pub train_pos_offset: f32::Vec2, // Smooth position offset from tile position (0.0 to 1.0)
     pub train_direction: TrainDirection,
     pub train_state: TrainState,
-    pub train_anim_frame: u8,  // 0 or 1 for the two animation frames
-    pub train_anim_timer: f32, // Timer for animation
-    pub garbage_held: i32,     // Amount of garbage currently on the train
-    pub total_dropoffs_count: i32,  // Total number of dropoff sites across all levels
-    pub dropoffs_full_count: i32,   // Number of dropoff sites at Full3 (3/3) state
-    pub game_won: bool,             // True when all dropoffs are full
-    pub message: Option<String>,    // Message to display in center of screen
+    pub train_anim_frame: u8,          // 0 or 1 for the two animation frames
+    pub train_anim_timer: f32,         // Timer for animation
+    pub garbage_held: i32,             // Amount of garbage currently on the train
+    pub total_dropoffs_count: i32,     // Total number of dropoff sites across all levels
+    pub dropoffs_full_count: i32,      // Number of dropoff sites at Full3 (3/3) state
+    pub game_won: bool,                // True when all dropoffs are full
+    pub message: Option<String>,       // Message to display in center of screen
     pub skip_level_requirements: bool, // Debug: skip level completion requirements
-    pub visited_levels: Vec<bool>,  // Track which levels have been visited
+    pub visited_levels: Vec<bool>,     // Track which levels have been visited
 
     // UI
     pub texture_ui_overlay: Texture2D,
@@ -189,9 +189,7 @@ impl GameState {
         let styles = Styles::new();
 
         // Load font first for loading screen
-        let font = load_ttf_font("assets/fonts/KenneyPixel.ttf")
-            .await
-            .unwrap();
+        let font = load_ttf_font("assets/fonts/KenneyPixel.ttf").await.unwrap();
 
         GameState::show_loading_screen(&styles, &font);
 
@@ -205,7 +203,6 @@ impl GameState {
 
         let levels = GameState::create_levels();
         let level_active = Some(0);
-        // let level_active = Some(levels.len() - 1);
 
         let selected_tile = None;
 
@@ -270,13 +267,27 @@ impl GameState {
         let texture_house_2 = load_texture("assets/sprites/house_002.png").await.unwrap();
 
         // Garbage
-        let texture_garbage_full = load_texture("assets/sprites/garbage_full.png").await.unwrap();
-        let texture_garbage_empty = load_texture("assets/sprites/garbage_empty.png").await.unwrap();
-        let texture_garbage_dropoff = load_texture("assets/sprites/recyclying_center.png").await.unwrap();
-        let texture_garbage_indicator_0 = load_texture("assets/sprites/garbage_indicator_0.png").await.unwrap();
-        let texture_garbage_indicator_1 = load_texture("assets/sprites/garbage_indicator_1.png").await.unwrap();
-        let texture_garbage_indicator_2 = load_texture("assets/sprites/garbage_indicator_2.png").await.unwrap();
-        let texture_garbage_indicator_3 = load_texture("assets/sprites/garbage_indicator_3.png").await.unwrap();
+        let texture_garbage_full = load_texture("assets/sprites/garbage_full.png")
+            .await
+            .unwrap();
+        let texture_garbage_empty = load_texture("assets/sprites/garbage_empty.png")
+            .await
+            .unwrap();
+        let texture_garbage_dropoff = load_texture("assets/sprites/recyclying_center.png")
+            .await
+            .unwrap();
+        let texture_garbage_indicator_0 = load_texture("assets/sprites/garbage_indicator_0.png")
+            .await
+            .unwrap();
+        let texture_garbage_indicator_1 = load_texture("assets/sprites/garbage_indicator_1.png")
+            .await
+            .unwrap();
+        let texture_garbage_indicator_2 = load_texture("assets/sprites/garbage_indicator_2.png")
+            .await
+            .unwrap();
+        let texture_garbage_indicator_3 = load_texture("assets/sprites/garbage_indicator_3.png")
+            .await
+            .unwrap();
 
         // Mountain borders
         let texture_mountain_border_u = load_texture("assets/sprites/mountain_border_u.png")
@@ -384,9 +395,7 @@ impl GameState {
             .unwrap();
 
         // UI
-        let texture_ui_overlay = load_texture("assets/sprites/ui_overlay.png")
-            .await
-            .unwrap();
+        let texture_ui_overlay = load_texture("assets/sprites/ui_overlay.png").await.unwrap();
         let texture_ui_card_track_h = load_texture("assets/sprites/ui_card_track_h.png")
             .await
             .unwrap();
@@ -417,13 +426,15 @@ impl GameState {
         let total_dropoffs_count = levels
             .iter()
             .flat_map(|level| level.tile_layout.values())
-            .filter(|tile_type| matches!(
-                tile_type,
-                TileType::GarbageDropoffEmpty
-                    | TileType::GarbageDropoffFull1
-                    | TileType::GarbageDropoffFull2
-                    | TileType::GarbageDropoffFull3
-            ))
+            .filter(|tile_type| {
+                matches!(
+                    tile_type,
+                    TileType::GarbageDropoffEmpty
+                        | TileType::GarbageDropoffFull1
+                        | TileType::GarbageDropoffFull2
+                        | TileType::GarbageDropoffFull3
+                )
+            })
             .count() as i32;
 
         Self {
@@ -829,33 +840,32 @@ impl GameState {
         // Add obstacles
         level11
             .tile_layout
-            .insert(IVec2::new(3, 2), TileType::Rock1);
+            .insert(IVec2::new(6, 3), TileType::Rock1);
         level11
             .tile_layout
-            .insert(IVec2::new(8, 1), TileType::House1);
+            .insert(IVec2::new(8, 3), TileType::House1);
         level11
             .tile_layout
-            .insert(IVec2::new(5, 4), TileType::House2);
+            .insert(IVec2::new(5, 3), TileType::House2);
         level11
             .tile_layout
-            .insert(IVec2::new(9, 5), TileType::Rock1);
+            .insert(IVec2::new(3, 4), TileType::House1);
         level11
             .tile_layout
-            .insert(IVec2::new(2, 5), TileType::House1);
-        // Add garbage pickups near houses
+            .insert(IVec2::new(9, 3), TileType::Rock1);
         level11
             .tile_layout
-            .insert(IVec2::new(7, 1), TileType::GarbagePickupFull);
+            .insert(IVec2::new(7, 3), TileType::GarbagePickupFull);
         level11
             .tile_layout
-            .insert(IVec2::new(4, 4), TileType::GarbagePickupFull);
+            .insert(IVec2::new(4, 3), TileType::GarbagePickupFull);
         level11
             .tile_layout
-            .insert(IVec2::new(1, 5), TileType::GarbagePickupFull);
+            .insert(IVec2::new(2, 4), TileType::GarbagePickupFull);
         // Add recycling center (dropoff)
         level11
             .tile_layout
-            .insert(IVec2::new(6, 2), TileType::GarbageDropoffEmpty);
+            .insert(IVec2::new(0, 0), TileType::GarbageDropoffEmpty);
         levels.push(level11);
 
         // Level 1-2 (grid 1,0 - has neighbors: left 1-1, right 1-3, down 2-2)
@@ -1062,6 +1072,42 @@ impl GameState {
                     .insert(IVec2::new(w, y), TileType::MountainBorderRight);
             }
         }
+        // Add obstacles
+        level21
+            .tile_layout
+            .insert(IVec2::new(0, 0), TileType::House1);
+        level21
+            .tile_layout
+            .insert(IVec2::new(1, 0), TileType::House2);
+        level21
+            .tile_layout
+            .insert(IVec2::new(2, 0), TileType::House1);
+        level21
+            .tile_layout
+            .insert(IVec2::new(0, 1), TileType::Rock1);
+        level21
+            .tile_layout
+            .insert(IVec2::new(1, 1), TileType::Rock1);
+        level21
+            .tile_layout
+            .insert(IVec2::new(2, 1), TileType::Rock1);
+        level21
+            .tile_layout
+            .insert(IVec2::new(3, 1), TileType::Rock1);
+        // Add garbage pickups
+        level21
+            .tile_layout
+            .insert(IVec2::new(0, 2), TileType::GarbagePickupFull);
+        level21
+            .tile_layout
+            .insert(IVec2::new(1, 2), TileType::GarbagePickupFull);
+        level21
+            .tile_layout
+            .insert(IVec2::new(2, 2), TileType::GarbagePickupFull);
+        // Add recycling center (dropoff)
+        level21
+            .tile_layout
+            .insert(IVec2::new(3, 2), TileType::GarbageDropoffEmpty);
         levels.push(level21);
 
         // Level 2-2 (grid 1,1 - has neighbors: up 1-2, left 2-1, right 2-3, down 3-2)
