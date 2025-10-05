@@ -26,6 +26,7 @@ pub enum TrainState {
     Running,
     Obstacle,
     BrokenRoute,
+    Exiting,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

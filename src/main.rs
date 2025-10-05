@@ -63,6 +63,7 @@ fn update_train_input(game_state: &mut GameState) {
             TrainState::Running => TrainState::Stopped,
             TrainState::Obstacle => TrainState::Stopped,
             TrainState::BrokenRoute => TrainState::Running,
+            TrainState::Exiting => TrainState::Stopped,
         };
     }
 
@@ -390,16 +391,76 @@ fn update_train_movement(game_state: &mut GameState) {
                         | TileType::TunnelLeftOpen
                         | TileType::TunnelRightOpen
                 ) {
-                    // Valid tunnel - allow crossing and stop
-                    match game_state.train_direction {
-                        TrainDirection::Up => game_state.train_pos_offset.y += 1.0,
-                        TrainDirection::Down => game_state.train_pos_offset.y -= 1.0,
-                        TrainDirection::Left => game_state.train_pos_offset.x += 1.0,
-                        TrainDirection::Right => game_state.train_pos_offset.x -= 1.0,
+                    // Check if train is exiting (direction matches tunnel direction)
+                    let is_exiting = matches!(
+                        (game_state.train_direction, tile),
+                        (TrainDirection::Up, TileType::TunnelUpOpen)
+                            | (TrainDirection::Down, TileType::TunnelDownOpen)
+                            | (TrainDirection::Left, TileType::TunnelLeftOpen)
+                            | (TrainDirection::Right, TileType::TunnelRightOpen)
+                    );
+
+                    if is_exiting {
+                        // Calculate which level to transition to
+                        let current_idx = game_state.level_active.unwrap();
+                        let grid_x = current_idx % 3;
+                        let grid_y = current_idx / 3;
+
+                        let next_level_idx = match game_state.train_direction {
+                            TrainDirection::Right if grid_x < 2 => Some(current_idx + 1),
+                            TrainDirection::Left if grid_x > 0 => Some(current_idx - 1),
+                            TrainDirection::Down if grid_y < 2 => Some(current_idx + 3),
+                            TrainDirection::Up if grid_y > 0 => Some(current_idx - 3),
+                            _ => None,
+                        };
+
+                        if let Some(next_idx) = next_level_idx {
+                            // Transition to next level
+                            game_state.level_active = Some(next_idx);
+                            let next_level = &game_state.levels[next_idx];
+
+                            // Set camera target to new level
+                            game_state.camera_target_pos = f32::vec2(
+                                next_level.pos_world.x + SCREEN_W / 2.0,
+                                next_level.pos_world.y + SCREEN_H / 2.0,
+                            );
+
+                            // Calculate arrival tunnel position based on exit position
+                            let new_w = next_level.grid_tiles.x;
+                            let new_h = next_level.grid_tiles.y;
+                            let current_pos = game_state.train_tile_pos;
+
+                            let arrival_pos = match game_state.train_direction {
+                                // Exiting right -> arriving at left
+                                TrainDirection::Right => IVec2::new(-1, current_pos.y),
+                                // Exiting left -> arriving at right
+                                TrainDirection::Left => IVec2::new(new_w, current_pos.y),
+                                // Exiting down -> arriving at top
+                                TrainDirection::Down => IVec2::new(current_pos.x, -1),
+                                // Exiting up -> arriving at bottom
+                                TrainDirection::Up => IVec2::new(current_pos.x, new_h),
+                            };
+
+                            // Position train at arrival tunnel with offset zero
+                            game_state.train_tile_pos = arrival_pos;
+                            game_state.train_pos_offset = f32::Vec2::ZERO;
+
+                            // Keep direction (train continues in same direction)
+                            // Train state remains Running
+                            return;
+                        }
+                    } else {
+                        // Train is entering - allow crossing and stop
+                        match game_state.train_direction {
+                            TrainDirection::Up => game_state.train_pos_offset.y += 1.0,
+                            TrainDirection::Down => game_state.train_pos_offset.y -= 1.0,
+                            TrainDirection::Left => game_state.train_pos_offset.x += 1.0,
+                            TrainDirection::Right => game_state.train_pos_offset.x -= 1.0,
+                        }
+                        game_state.train_tile_pos = next_pos;
+                        game_state.train_state = TrainState::Stopped;
+                        return;
                     }
-                    game_state.train_tile_pos = next_pos;
-                    game_state.train_state = TrainState::Stopped;
-                    return;
                 }
             }
             // No tunnel or closed tunnel - broken route, clamp position and stop

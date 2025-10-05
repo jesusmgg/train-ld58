@@ -8,5 +8,5 @@ pub const SCREEN_H: f32 = 288.0;
 
 pub const CAMERA_TRANSITION_SPEED: f32 = 0.15;
 
-pub const TRAIN_SPEED: f32 = 1.0; // Tiles per second
+pub const TRAIN_SPEED: f32 = 2.0; // Tiles per second
 pub const TRAIN_ANIM_SPEED: f32 = 0.15; // Seconds per frame
