@@ -20,9 +20,11 @@ async fn main() {
             .camera
             .screen_to_world(f32::Vec2::from(mouse_position()));
         update_train_input(&mut game_state);
+        update_message_dismissal(&mut game_state);
+        #[cfg(debug_assertions)]
+        update_debug_controls(&mut game_state);
 
         // Game logic update
-        update_current_level(&mut game_state);
         update_tile_highlight(&mut game_state);
         update_ui_card_selection(&mut game_state);
         update_tile_placement(&mut game_state);
@@ -51,6 +53,7 @@ async fn main() {
         set_default_camera();
         render_ui_overlay(&game_state);
         render_garbage_counters(&game_state);
+        render_message(&game_state);
         #[cfg(debug_assertions)]
         render_diagnostics(&game_state);
 
@@ -102,7 +105,15 @@ fn update_train_input(game_state: &mut GameState) {
     }
 }
 
-fn update_current_level(game_state: &mut GameState) {
+fn update_message_dismissal(game_state: &mut GameState) {
+    if game_state.message.is_some() {
+        if is_mouse_button_pressed(MouseButton::Left) || get_last_key_pressed().is_some() {
+            game_state.message = None;
+        }
+    }
+}
+
+fn update_debug_controls(game_state: &mut GameState) {
     let active_idx = match game_state.level_active {
         Some(idx) => idx,
         None => return,
@@ -125,9 +136,49 @@ fn update_current_level(game_state: &mut GameState) {
         grid_x = (grid_x + 1).min(2);
     }
 
+    // M to test message display
+    if is_key_pressed(KeyCode::M) {
+        game_state.message = Some("Test message!".to_string());
+    }
+
+    // T to give 50 of each track piece
+    if is_key_pressed(KeyCode::T) {
+        game_state.count_track_h = 50;
+        game_state.count_track_v = 50;
+        game_state.count_track_ul = 50;
+        game_state.count_track_ur = 50;
+        game_state.count_track_dl = 50;
+        game_state.count_track_dr = 50;
+    }
+
     let new_idx = (grid_y * 3 + grid_x) as usize;
 
     if new_idx != active_idx {
+        // Check if current level has at least one full dropoff
+        let current_level = &game_state.levels[active_idx];
+        let has_full_dropoff = current_level
+            .tile_layout
+            .values()
+            .any(|tile| matches!(tile, TileType::GarbageDropoffFull3));
+
+        if !has_full_dropoff {
+            // Check if current level has any dropoffs at all
+            let has_dropoffs = current_level.tile_layout.values().any(|tile| {
+                matches!(
+                    tile,
+                    TileType::GarbageDropoffEmpty
+                        | TileType::GarbageDropoffFull1
+                        | TileType::GarbageDropoffFull2
+                        | TileType::GarbageDropoffFull3
+                )
+            });
+
+            if has_dropoffs {
+                game_state.message =
+                    Some("Fill at least one recycling center! <R> to reset train.".to_string());
+                return;
+            }
+        }
         game_state.level_active = Some(new_idx);
         let new_level = &game_state.levels[new_idx];
 
@@ -454,6 +505,81 @@ fn render_garbage_counters(game_state: &GameState) {
         &WHITE,
         &game_state.font,
     );
+}
+
+fn render_message(game_state: &GameState) {
+    if let Some(message) = &game_state.message {
+        // Calculate integer zoom factor for pixel perfect rendering (same as camera)
+        let zoom = ((screen_width() as i32 / SCREEN_W as i32)
+            .min(screen_height() as i32 / SCREEN_H as i32)) as i32;
+
+        let zoomed_w = (SCREEN_W as i32) * zoom;
+        let zoomed_h = (SCREEN_H as i32) * zoom;
+
+        // Center on screen
+        let x_offset = ((screen_width() as i32 - zoomed_w) / 2) as f32;
+        let y_offset = ((screen_height() as i32 - zoomed_h) / 2) as f32;
+
+        // Draw semi-transparent background overlay
+        draw_rectangle(
+            x_offset,
+            y_offset,
+            zoomed_w as f32,
+            zoomed_h as f32,
+            Color::new(0.0, 0.0, 0.0, 0.7),
+        );
+
+        // Message box dimensions
+        let box_width = 280.0;
+        let box_height = 60.0;
+        let box_x = (SCREEN_W - box_width) / 2.0;
+        let box_y = (SCREEN_H - box_height) / 2.0;
+
+        let screen_box_x = x_offset + (box_x * zoom as f32);
+        let screen_box_y = y_offset + (box_y * zoom as f32);
+
+        // Draw message box background
+        draw_rectangle(
+            screen_box_x,
+            screen_box_y,
+            box_width * zoom as f32,
+            box_height * zoom as f32,
+            game_state.styles.colors.orange_2,
+        );
+
+        // Draw message box border
+        draw_rectangle(
+            screen_box_x - 2.0 * zoom as f32,
+            screen_box_y - 2.0 * zoom as f32,
+            (box_width + 4.0) * zoom as f32,
+            (box_height + 4.0) * zoom as f32,
+            game_state.styles.colors.brown_3,
+        );
+        draw_rectangle(
+            screen_box_x,
+            screen_box_y,
+            box_width * zoom as f32,
+            box_height * zoom as f32,
+            game_state.styles.colors.orange_2,
+        );
+
+        // Draw message text
+        let font_size = 16.0;
+        let text_x = box_x + 10.0;
+        let text_y = box_y + 30.0;
+
+        let screen_text_x = x_offset + (text_x * zoom as f32);
+        let screen_text_y = y_offset + (text_y * zoom as f32);
+
+        draw_scaled_text(
+            message,
+            screen_text_x,
+            screen_text_y,
+            font_size * zoom as f32,
+            &game_state.styles.colors.brown_3,
+            &game_state.font,
+        );
+    }
 }
 
 fn render_diagnostics(game_state: &GameState) {
