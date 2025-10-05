@@ -1058,11 +1058,7 @@ impl GameState {
                 .insert(IVec2::new(-1, y), TileType::MountainBorderLeft);
         }
         for y in 0..h {
-            if y == h / 3 {
-                level21
-                    .tile_layout
-                    .insert(IVec2::new(w, y), TileType::TunnelRightOpen);
-            } else if y == 2 * h / 3 {
+            if y == 2 * h / 3 {
                 level21
                     .tile_layout
                     .insert(IVec2::new(w, y), TileType::TunnelRightClosed);
@@ -1072,42 +1068,46 @@ impl GameState {
                     .insert(IVec2::new(w, y), TileType::MountainBorderRight);
             }
         }
-        // Add obstacles
+        // Add houses
         level21
             .tile_layout
-            .insert(IVec2::new(0, 0), TileType::House1);
+            .insert(IVec2::new(2, 2), TileType::House1);
         level21
             .tile_layout
-            .insert(IVec2::new(1, 0), TileType::House2);
+            .insert(IVec2::new(5, 3), TileType::House2);
         level21
             .tile_layout
-            .insert(IVec2::new(2, 0), TileType::House1);
+            .insert(IVec2::new(9, 1), TileType::House1);
+        // Add rocks
         level21
             .tile_layout
-            .insert(IVec2::new(0, 1), TileType::Rock1);
+            .insert(IVec2::new(6, 5), TileType::Rock1);
         level21
             .tile_layout
-            .insert(IVec2::new(1, 1), TileType::Rock1);
+            .insert(IVec2::new(7, 4), TileType::Rock1);
         level21
             .tile_layout
-            .insert(IVec2::new(2, 1), TileType::Rock1);
+            .insert(IVec2::new(8, 3), TileType::Rock1);
         level21
             .tile_layout
             .insert(IVec2::new(3, 1), TileType::Rock1);
         // Add garbage pickups
         level21
             .tile_layout
-            .insert(IVec2::new(0, 2), TileType::GarbagePickupFull);
-        level21
-            .tile_layout
             .insert(IVec2::new(1, 2), TileType::GarbagePickupFull);
         level21
             .tile_layout
-            .insert(IVec2::new(2, 2), TileType::GarbagePickupFull);
-        // Add recycling center (dropoff)
+            .insert(IVec2::new(6, 3), TileType::GarbagePickupFull);
         level21
             .tile_layout
-            .insert(IVec2::new(3, 2), TileType::GarbageDropoffEmpty);
+            .insert(IVec2::new(8, 1), TileType::GarbagePickupFull);
+        // Add recycling centers (dropoffs)
+        level21
+            .tile_layout
+            .insert(IVec2::new(1, 5), TileType::GarbageDropoffEmpty);
+        level21
+            .tile_layout
+            .insert(IVec2::new(9, 6), TileType::GarbageDropoffEmpty);
         levels.push(level21);
 
         // Level 2-2 (grid 1,1 - has neighbors: up 1-2, left 2-1, right 2-3, down 3-2)
@@ -1146,11 +1146,7 @@ impl GameState {
             }
         }
         for x in 0..w {
-            if x == w / 3 {
-                level22
-                    .tile_layout
-                    .insert(IVec2::new(x, h), TileType::TunnelDownOpen);
-            } else if x == 2 * w / 3 {
+            if x == 2 * w / 3 {
                 level22
                     .tile_layout
                     .insert(IVec2::new(x, h), TileType::TunnelDownClosed);
@@ -1161,11 +1157,7 @@ impl GameState {
             }
         }
         for y in 0..h {
-            if y == h / 3 {
-                level22
-                    .tile_layout
-                    .insert(IVec2::new(-1, y), TileType::TunnelLeftOpen);
-            } else if y == 2 * h / 3 {
+            if y == 2 * h / 3 {
                 level22
                     .tile_layout
                     .insert(IVec2::new(-1, y), TileType::TunnelLeftClosed);
@@ -1324,15 +1316,58 @@ impl GameState {
                     .insert(IVec2::new(w, y), TileType::MountainBorderRight);
             }
         }
+        // Add houses
+        level31
+            .tile_layout
+            .insert(IVec2::new(2, 2), TileType::House1);
+        level31
+            .tile_layout
+            .insert(IVec2::new(1, 6), TileType::House2);
+        level31
+            .tile_layout
+            .insert(IVec2::new(6, 4), TileType::House1);
+        // Add rocks
+        level31
+            .tile_layout
+            .insert(IVec2::new(4, 0), TileType::Rock1);
+        level31
+            .tile_layout
+            .insert(IVec2::new(4, 1), TileType::Rock1);
+        level31
+            .tile_layout
+            .insert(IVec2::new(4, 4), TileType::Rock1);
+        level31
+            .tile_layout
+            .insert(IVec2::new(4, 5), TileType::Rock1);
+        level31
+            .tile_layout
+            .insert(IVec2::new(4, 6), TileType::Rock1);
+        // Add garbage pickups
+        level31
+            .tile_layout
+            .insert(IVec2::new(3, 2), TileType::GarbagePickupFull);
+        level31
+            .tile_layout
+            .insert(IVec2::new(0, 6), TileType::GarbagePickupFull);
+        level31
+            .tile_layout
+            .insert(IVec2::new(5, 4), TileType::GarbagePickupFull);
+        // Add recycling centers (dropoffs)
+        level31
+            .tile_layout
+            .insert(IVec2::new(2, 6), TileType::GarbageDropoffEmpty);
+        level31
+            .tile_layout
+            .insert(IVec2::new(8, 3), TileType::GarbageDropoffEmpty);
         levels.push(level31);
 
         // Level 3-2 (grid 1,2 - has neighbors: up 2-2, left 3-1, right 3-3)
-        // Default start: top tunnel (first one at w/3)
+        // Default start: left tunnel (first one at h/3)
         let mut level32 = Level::new(
             "3-2",
             grid_size,
             f32::vec2(SCREEN_W, SCREEN_H * 2.0),
-            IVec2::new(w / 3, -1),
+            IVec2::new(-1, h / 3),
         );
         level32
             .tile_layout
@@ -1347,11 +1382,7 @@ impl GameState {
             .tile_layout
             .insert(IVec2::new(w, h), TileType::MountainBorderCornerUR);
         for x in 0..w {
-            if x == w / 3 {
-                level32
-                    .tile_layout
-                    .insert(IVec2::new(x, -1), TileType::TunnelUpOpen);
-            } else if x == 2 * w / 3 {
+            if x == 2 * w / 3 {
                 level32
                     .tile_layout
                     .insert(IVec2::new(x, -1), TileType::TunnelUpClosed);
@@ -1396,6 +1427,40 @@ impl GameState {
                     .insert(IVec2::new(w, y), TileType::MountainBorderRight);
             }
         }
+        // Add houses
+        level32
+            .tile_layout
+            .insert(IVec2::new(1, 0), TileType::House1);
+        level32
+            .tile_layout
+            .insert(IVec2::new(9, 1), TileType::House2);
+        // Add rocks
+        level32
+            .tile_layout
+            .insert(IVec2::new(4, 4), TileType::Rock1);
+        level32
+            .tile_layout
+            .insert(IVec2::new(5, 4), TileType::Rock1);
+        level32
+            .tile_layout
+            .insert(IVec2::new(6, 4), TileType::Rock1);
+        level32
+            .tile_layout
+            .insert(IVec2::new(8, 2), TileType::Rock1);
+        // Add garbage pickups
+        level32
+            .tile_layout
+            .insert(IVec2::new(0, 0), TileType::GarbagePickupFull);
+        level32
+            .tile_layout
+            .insert(IVec2::new(2, 0), TileType::GarbagePickupFull);
+        level32
+            .tile_layout
+            .insert(IVec2::new(9, 0), TileType::GarbagePickupFull);
+        // Add recycling center (dropoff)
+        level32
+            .tile_layout
+            .insert(IVec2::new(5, 6), TileType::GarbageDropoffEmpty);
         levels.push(level32);
 
         // Level 3-3 (grid 2,2 - has neighbors: up 2-3, left 3-2)

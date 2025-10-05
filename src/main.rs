@@ -274,14 +274,15 @@ fn update_debug_controls(game_state: &mut GameState) {
         if !game_state.visited_levels[new_idx] {
             game_state.visited_levels[new_idx] = true;
 
-            // Give track pieces on first visit
-            game_state.count_track_h += 10;
-            game_state.count_track_v += 10;
-            game_state.count_track_ul += 5;
-            game_state.count_track_ur += 5;
-            game_state.count_track_dl += 5;
-            game_state.count_track_dr += 5;
+            // Reset track pieces to standard on first visit
+            game_state.count_track_h = 10;
+            game_state.count_track_v = 10;
+            game_state.count_track_ul = 5;
+            game_state.count_track_ur = 5;
+            game_state.count_track_dl = 5;
+            game_state.count_track_dr = 5;
         }
+        // Don't alter pieces on revisit
 
         game_state.level_active = Some(new_idx);
         let new_level = &game_state.levels[new_idx];
@@ -827,6 +828,35 @@ fn render_diagnostics(game_state: &GameState) {
         &color,
         &game_state.font,
     );
+    y += 24.0;
+    // Count individual track pieces placed across all levels
+    let mut h = 0;
+    let mut v = 0;
+    let mut ul = 0;
+    let mut ur = 0;
+    let mut dl = 0;
+    let mut dr = 0;
+    for level in &game_state.levels {
+        for tile_type in level.tile_layout.values() {
+            match tile_type {
+                TileType::TrackHorizontal => h += 1,
+                TileType::TrackVertical => v += 1,
+                TileType::TrackCornerUL => ul += 1,
+                TileType::TrackCornerUR => ur += 1,
+                TileType::TrackCornerDL => dl += 1,
+                TileType::TrackCornerDR => dr += 1,
+                _ => {}
+            }
+        }
+    }
+    draw_scaled_text(
+        format!("Tracks: {} {} {} {} {} {}", h, v, ul, ur, dl, dr).as_str(),
+        x,
+        y,
+        font_size,
+        &color,
+        &game_state.font,
+    );
 }
 
 fn update_train_movement(game_state: &mut GameState) {
@@ -906,6 +936,36 @@ fn update_train_movement(game_state: &mut GameState) {
                         };
 
                         if let Some(next_idx) = next_level_idx {
+                            // Check if current level has at least one full dropoff
+                            let current_level = &game_state.levels[current_idx];
+                            let has_full_dropoff = current_level
+                                .tile_layout
+                                .values()
+                                .any(|tile| matches!(tile, TileType::GarbageDropoffFull3));
+
+                            if !has_full_dropoff {
+                                // Check if current level has any dropoffs at all
+                                let has_dropoffs = current_level.tile_layout.values().any(|tile| {
+                                    matches!(
+                                        tile,
+                                        TileType::GarbageDropoffEmpty
+                                            | TileType::GarbageDropoffFull1
+                                            | TileType::GarbageDropoffFull2
+                                            | TileType::GarbageDropoffFull3
+                                    )
+                                });
+
+                                if has_dropoffs {
+                                    // Stop the train and show message
+                                    game_state.train_state = TrainState::Stopped;
+                                    game_state.message = Some(
+                                        "Fill at least one recycling center! <R> to reset train."
+                                            .to_string(),
+                                    );
+                                    return;
+                                }
+                            }
+
                             // Transition to next level
                             game_state.level_active = Some(next_idx);
                             let next_level = &game_state.levels[next_idx];
