@@ -156,6 +156,16 @@ fn update_debug_controls(game_state: &mut GameState) {
         game_state.skip_level_requirements = !game_state.skip_level_requirements;
     }
 
+    // G to reset track pieces to standard amounts
+    if is_key_pressed(KeyCode::G) {
+        game_state.count_track_h = 10;
+        game_state.count_track_v = 10;
+        game_state.count_track_ul = 5;
+        game_state.count_track_ur = 5;
+        game_state.count_track_dl = 5;
+        game_state.count_track_dr = 5;
+    }
+
     let new_idx = (grid_y * 3 + grid_x) as usize;
 
     if new_idx != active_idx {
@@ -186,6 +196,20 @@ fn update_debug_controls(game_state: &mut GameState) {
                 }
             }
         }
+
+        // Check if this is the first visit to the level
+        if !game_state.visited_levels[new_idx] {
+            game_state.visited_levels[new_idx] = true;
+
+            // Give track pieces on first visit
+            game_state.count_track_h += 10;
+            game_state.count_track_v += 10;
+            game_state.count_track_ul += 5;
+            game_state.count_track_ur += 5;
+            game_state.count_track_dl += 5;
+            game_state.count_track_dr += 5;
+        }
+
         game_state.level_active = Some(new_idx);
         let new_level = &game_state.levels[new_idx];
 
@@ -648,6 +672,16 @@ fn render_diagnostics(game_state: &GameState) {
     y += 24.0;
     draw_scaled_text(
         format!("Skip requirements: {}", &game_state.skip_level_requirements).as_str(),
+        x,
+        y,
+        font_size,
+        &color,
+        &game_state.font,
+    );
+    y += 24.0;
+    let visited_count = game_state.visited_levels.iter().filter(|&&v| v).count();
+    draw_scaled_text(
+        format!("Visited levels: {}/9", visited_count).as_str(),
         x,
         y,
         font_size,

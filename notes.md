@@ -23,6 +23,7 @@
 - Win UI.
 - Initial logo.
 - Game saving.
+- Help popup.
 
 ## Bugs
 - Loading screen is not showing.

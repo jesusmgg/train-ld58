@@ -167,6 +167,7 @@ pub struct GameState {
     pub game_won: bool,             // True when all dropoffs are full
     pub message: Option<String>,    // Message to display in center of screen
     pub skip_level_requirements: bool, // Debug: skip level completion requirements
+    pub visited_levels: Vec<bool>,  // Track which levels have been visited
 
     // UI
     pub texture_ui_overlay: Texture2D,
@@ -205,6 +206,12 @@ impl GameState {
         // let level_active = Some(levels.len() - 1);
 
         let selected_tile = None;
+
+        // Mark starting level as visited
+        let mut visited_levels = vec![false; 9];
+        if let Some(idx) = level_active {
+            visited_levels[idx] = true;
+        }
 
         // Initialize track piece counts
         let count_track_h = 10;
@@ -503,6 +510,7 @@ impl GameState {
             game_won: false,
             message: None,
             skip_level_requirements: false,
+            visited_levels,
 
             texture_ui_overlay,
             texture_ui_card_track_h,
