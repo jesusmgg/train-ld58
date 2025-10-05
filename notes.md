@@ -1,5 +1,4 @@
 ## Graphics pending:
-- Dumpsters.
 - Recycling plant.
 - Smoke particles.
 

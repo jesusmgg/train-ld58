@@ -47,7 +47,10 @@ pub enum TileType {
     // Garbage system
     GarbagePickupFull,
     GarbagePickupEmpty,
-    GarbageDropoff,
+    GarbageDropoffEmpty,
+    GarbageDropoffFull1,
+    GarbageDropoffFull2,
+    GarbageDropoffFull3,
 
     // Mountain borders
     MountainBorderUp,
@@ -110,6 +113,11 @@ pub struct GameState {
     // Garbage
     pub texture_garbage_full: Texture2D,
     pub texture_garbage_empty: Texture2D,
+    pub texture_garbage_dropoff: Texture2D,
+    pub texture_garbage_indicator_0: Texture2D,
+    pub texture_garbage_indicator_1: Texture2D,
+    pub texture_garbage_indicator_2: Texture2D,
+    pub texture_garbage_indicator_3: Texture2D,
 
     // Mountain borders
     pub texture_mountain_border_u: Texture2D,
@@ -241,6 +249,11 @@ impl GameState {
         // Garbage
         let texture_garbage_full = load_texture("assets/sprites/garbage_full.png").await.unwrap();
         let texture_garbage_empty = load_texture("assets/sprites/garbage_empty.png").await.unwrap();
+        let texture_garbage_dropoff = load_texture("assets/sprites/recyclying_center.png").await.unwrap();
+        let texture_garbage_indicator_0 = load_texture("assets/sprites/garbage_indicator_0.png").await.unwrap();
+        let texture_garbage_indicator_1 = load_texture("assets/sprites/garbage_indicator_1.png").await.unwrap();
+        let texture_garbage_indicator_2 = load_texture("assets/sprites/garbage_indicator_2.png").await.unwrap();
+        let texture_garbage_indicator_3 = load_texture("assets/sprites/garbage_indicator_3.png").await.unwrap();
 
         // Mountain borders
         let texture_mountain_border_u = load_texture("assets/sprites/mountain_border_u.png")
@@ -414,6 +427,11 @@ impl GameState {
 
             texture_garbage_full,
             texture_garbage_empty,
+            texture_garbage_dropoff,
+            texture_garbage_indicator_0,
+            texture_garbage_indicator_1,
+            texture_garbage_indicator_2,
+            texture_garbage_indicator_3,
 
             texture_mountain_border_u,
             texture_mountain_border_d,
@@ -494,7 +512,10 @@ impl GameState {
 
             TileType::GarbagePickupFull => &self.texture_garbage_full,
             TileType::GarbagePickupEmpty => &self.texture_garbage_empty,
-            TileType::GarbageDropoff => &self.texture_placeholder,
+            TileType::GarbageDropoffEmpty => &self.texture_garbage_dropoff,
+            TileType::GarbageDropoffFull1 => &self.texture_garbage_dropoff,
+            TileType::GarbageDropoffFull2 => &self.texture_garbage_dropoff,
+            TileType::GarbageDropoffFull3 => &self.texture_garbage_dropoff,
 
             TileType::MountainBorderUp => &self.texture_mountain_border_u,
             TileType::MountainBorderDown => &self.texture_mountain_border_d,
@@ -544,7 +565,10 @@ impl GameState {
                 | TileType::House2
                 | TileType::GarbagePickupFull
                 | TileType::GarbagePickupEmpty
-                | TileType::GarbageDropoff
+                | TileType::GarbageDropoffEmpty
+                | TileType::GarbageDropoffFull1
+                | TileType::GarbageDropoffFull2
+                | TileType::GarbageDropoffFull3
         )
     }
 
@@ -718,6 +742,10 @@ impl GameState {
         level11
             .tile_layout
             .insert(IVec2::new(4, 4), TileType::GarbagePickupFull);
+        // Add recycling center (dropoff)
+        level11
+            .tile_layout
+            .insert(IVec2::new(6, 2), TileType::GarbageDropoffEmpty);
         levels.push(level11);
 
         // Level 1-2 (grid 1,0 - has neighbors: left 1-1, right 1-3, down 2-2)

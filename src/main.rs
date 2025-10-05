@@ -29,6 +29,7 @@ async fn main() {
         update_tile_removal(&mut game_state);
         update_train_movement(&mut game_state);
         check_garbage_pickup(&mut game_state);
+        check_garbage_dropoff(&mut game_state);
         update_train_animation(&mut game_state);
         update_sim(&mut game_state);
         update_camera(&mut game_state);
@@ -38,6 +39,7 @@ async fn main() {
         render_background(&game_state);
         render_grid(&game_state);
         render_placed_tiles(&game_state);
+        render_garbage_indicators(&game_state);
         render_tunnel_layer_2(&game_state);
         render_tunnel_layer_3(&game_state);
         render_tile_highlight(&game_state);
@@ -786,6 +788,84 @@ fn check_garbage_pickup(game_state: &mut GameState) {
     }
 }
 
+fn check_garbage_dropoff(game_state: &mut GameState) {
+    if game_state.train_state != TrainState::Running {
+        return;
+    }
+
+    if game_state.garbage_held <= 0 {
+        return;
+    }
+
+    let train_pos = game_state.train_tile_pos;
+
+    // Check all 4 adjacent tiles for garbage dropoff sites
+    let adjacent_positions = [
+        train_pos + IVec2::new(0, -1), // Up
+        train_pos + IVec2::new(0, 1),  // Down
+        train_pos + IVec2::new(-1, 0), // Left
+        train_pos + IVec2::new(1, 0),  // Right
+    ];
+
+    // Find dropoff sites that aren't full
+    let dropoff_positions: Vec<(IVec2, TileType)> = if let Some(level) = game_state.current_level()
+    {
+        adjacent_positions
+            .iter()
+            .filter_map(|pos| {
+                if let Some(tile) = level.tile_layout.get(pos) {
+                    match tile {
+                        TileType::GarbageDropoffEmpty
+                        | TileType::GarbageDropoffFull1
+                        | TileType::GarbageDropoffFull2 => Some((*pos, *tile)),
+                        _ => None,
+                    }
+                } else {
+                    None
+                }
+            })
+            .collect()
+    } else {
+        Vec::new()
+    };
+
+    // Drop off garbage at each available site
+    for (pos, current_state) in dropoff_positions {
+        if game_state.garbage_held <= 0 {
+            break;
+        }
+
+        // Calculate current fullness and remaining capacity
+        let current_fullness = match current_state {
+            TileType::GarbageDropoffEmpty => 0,
+            TileType::GarbageDropoffFull1 => 1,
+            TileType::GarbageDropoffFull2 => 2,
+            _ => continue,
+        };
+
+        let remaining_capacity = 3 - current_fullness;
+        let amount_to_drop = game_state.garbage_held.min(remaining_capacity);
+
+        if amount_to_drop <= 0 {
+            continue;
+        }
+
+        // Calculate new fullness level
+        let new_fullness = current_fullness + amount_to_drop;
+        let new_state = match new_fullness {
+            1 => TileType::GarbageDropoffFull1,
+            2 => TileType::GarbageDropoffFull2,
+            3 => TileType::GarbageDropoffFull3,
+            _ => continue,
+        };
+
+        if let Some(level) = game_state.current_level_mut() {
+            level.tile_layout.insert(pos, new_state);
+            game_state.garbage_held -= amount_to_drop;
+        }
+    }
+}
+
 fn update_train_animation(game_state: &mut GameState) {
     if game_state.train_state != TrainState::Running {
         return;
@@ -1067,6 +1147,57 @@ fn render_placed_tiles(game_state: &GameState) {
                                 ..Default::default()
                             },
                         );
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn render_garbage_indicators(game_state: &GameState) {
+    // Render fullness indicators for garbage dropoff sites
+    if let Some(active_idx) = game_state.level_active {
+        let grid_x = active_idx % 3;
+        let grid_y = active_idx / 3;
+
+        // Draw 3x3 block centered on current level
+        for dy in -1..=1 {
+            for dx in -1..=1 {
+                let nx = grid_x as i32 + dx;
+                let ny = grid_y as i32 + dy;
+
+                if nx >= 0 && nx < 3 && ny >= 0 && ny < 3 {
+                    let neighbor_idx = (ny * 3 + nx) as usize;
+                    let level = &game_state.levels[neighbor_idx];
+
+                    let grid_offset = level.grid_offset();
+                    let grid_origin = level.pos_world + grid_offset;
+
+                    // Draw indicators for dropoff sites
+                    for (tile_pos, tile_type) in &level.tile_layout {
+                        let indicator_texture = match tile_type {
+                            TileType::GarbageDropoffEmpty => Some(&game_state.texture_garbage_indicator_0),
+                            TileType::GarbageDropoffFull1 => Some(&game_state.texture_garbage_indicator_1),
+                            TileType::GarbageDropoffFull2 => Some(&game_state.texture_garbage_indicator_2),
+                            TileType::GarbageDropoffFull3 => Some(&game_state.texture_garbage_indicator_3),
+                            _ => None,
+                        };
+
+                        if let Some(texture) = indicator_texture {
+                            let x = grid_origin.x + (tile_pos.x as f32 * TILE_SIZE_X);
+                            let y = grid_origin.y + (tile_pos.y as f32 * TILE_SIZE_Y);
+
+                            draw_texture_ex(
+                                texture,
+                                x,
+                                y,
+                                WHITE,
+                                DrawTextureParams {
+                                    flip_y: true,
+                                    ..Default::default()
+                                },
+                            );
+                        }
                     }
                 }
             }
