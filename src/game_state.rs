@@ -104,7 +104,6 @@ pub struct GameState {
     pub texture_track_corner_ur: Texture2D,
     pub texture_track_corner_dl: Texture2D,
     pub texture_track_corner_dr: Texture2D,
-    pub texture_placeholder: Texture2D,
 
     // Obstacles
     pub texture_rock_1: Texture2D,
@@ -275,9 +274,6 @@ impl GameState {
             .await
             .unwrap();
         let texture_track_corner_dr = load_texture("assets/sprites/track_corner_dr.png")
-            .await
-            .unwrap();
-        let texture_placeholder = load_texture("assets/sprites/placeholder.png")
             .await
             .unwrap();
 
@@ -505,7 +501,6 @@ impl GameState {
             texture_track_corner_ur,
             texture_track_corner_dl,
             texture_track_corner_dr,
-            texture_placeholder,
 
             texture_rock_1,
             texture_house_1,
