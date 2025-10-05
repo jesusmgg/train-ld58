@@ -34,7 +34,6 @@ async fn main() {
         check_garbage_pickup(&mut game_state);
         check_garbage_dropoff(&mut game_state);
         update_train_animation(&mut game_state);
-        update_sim(&mut game_state);
         update_level_22_tunnels(&mut game_state);
         update_help_message(&mut game_state);
         update_music(&mut game_state);
@@ -78,7 +77,6 @@ fn update_train_input(game_state: &mut GameState) {
             TrainState::Running => TrainState::Stopped,
             TrainState::Obstacle => TrainState::Stopped,
             TrainState::BrokenRoute => TrainState::Running,
-            TrainState::Exiting => TrainState::Stopped,
         };
     }
 
@@ -685,10 +683,21 @@ fn render_message(game_state: &GameState) {
         // Split message into lines
         let lines: Vec<&str> = message.split('\n').collect();
         let line_height = 20.0;
+        let title_height = 28.0;
+
+        // Calculate box height accounting for title
+        let mut total_height = 40.0;
+        for line in &lines {
+            if *line == "CLEAN LINE" {
+                total_height += title_height;
+            } else {
+                total_height += line_height;
+            }
+        }
 
         // Message box dimensions
         let box_width = 280.0;
-        let box_height = 40.0 + (lines.len() as f32 * line_height);
+        let box_height = total_height;
         let box_x = (SCREEN_W - box_width) / 2.0;
         let box_y = (SCREEN_H - box_height) / 2.0;
 
@@ -722,6 +731,7 @@ fn render_message(game_state: &GameState) {
 
         // Draw message text lines
         let font_size = 16.0;
+        let title_font_size = 24.0;
         let text_x = box_x + 10.0;
         let mut text_y = box_y + 25.0;
 
@@ -729,16 +739,28 @@ fn render_message(game_state: &GameState) {
             let screen_text_x = x_offset + (text_x * zoom as f32);
             let screen_text_y = y_offset + (text_y * zoom as f32);
 
+            // Use larger font for title
+            let current_font_size = if line == "CLEAN LINE" {
+                title_font_size
+            } else {
+                font_size
+            };
+
             draw_scaled_text(
                 line,
                 screen_text_x,
                 screen_text_y,
-                font_size * zoom as f32,
+                current_font_size * zoom as f32,
                 &game_state.styles.colors.brown_3,
                 &game_state.font,
             );
 
-            text_y += line_height;
+            // Use different line height for title
+            if line == "CLEAN LINE" {
+                text_y += title_height;
+            } else {
+                text_y += line_height;
+            }
         }
     }
 }
@@ -1435,8 +1457,6 @@ fn update_train_animation(game_state: &mut GameState) {
     }
 }
 
-fn update_sim(game_state: &mut GameState) {}
-
 fn update_level_22_tunnels(game_state: &mut GameState) {
     // Check if we're on level 2-2 (index 4) and haven't opened tunnels yet
     if let Some(level_idx) = game_state.level_active {
@@ -1523,7 +1543,7 @@ fn update_level_22_tunnels(game_state: &mut GameState) {
 }
 
 fn update_help_message(game_state: &mut GameState) {
-    let help_msg = Some("Build railroads, collect garbage, and take it to\nthe recycling centers.\n\nStart/stop the train with <Space>.\n\nReset the current level with <R>.".to_string());
+    let help_msg = Some("CLEAN LINE\nBuild railroads, collect garbage, and take it to\nthe recycling centers.\n\nStart/stop the train with <Space>.\n\nReset the current level with <R>.".to_string());
 
     // Show help message at the start of the game
     if !game_state.help_message_shown {

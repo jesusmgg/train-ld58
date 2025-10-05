@@ -27,7 +27,6 @@ pub enum TrainState {
     Running,
     Obstacle,
     BrokenRoute,
-    Exiting,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -89,7 +88,6 @@ pub struct GameState {
     pub level_active: Option<usize>,
 
     pub selected_tile: Option<TileType>,
-    pub last_hovered_card: Option<usize>, // Track which UI card is being hovered over
 
     // Track piece inventory counts
     pub count_track_h: i32,
@@ -196,8 +194,6 @@ pub struct GameState {
     pub music_target_volume: f32,           // Target volume for fading
 
     // Sound effects
-    pub sfx_level_transition: macroquad::audio::Sound,
-    pub sfx_ui_hover: macroquad::audio::Sound,
     pub sfx_ui_selection: macroquad::audio::Sound,
     pub sfx_ui_dialog_open: macroquad::audio::Sound,
     pub sfx_garbage_pickup: macroquad::audio::Sound,
@@ -229,7 +225,6 @@ impl GameState {
         let level_active = Some(0);
 
         let selected_tile = None;
-        let last_hovered_card = None;
 
         // Mark starting level as visited
         let mut visited_levels = vec![false; 9];
@@ -444,13 +439,15 @@ impl GameState {
             .unwrap();
 
         // Load sound effects
-        let sfx_level_transition = load_sound("assets/sfx/level_transition.ogg").await.unwrap();
-        let sfx_ui_hover = load_sound("assets/sfx/ui_hover.ogg").await.unwrap();
         let sfx_ui_selection = load_sound("assets/sfx/ui_selection.ogg").await.unwrap();
         let sfx_ui_dialog_open = load_sound("assets/sfx/ui_dialog_open.ogg").await.unwrap();
         let sfx_garbage_pickup = load_sound("assets/sfx/garbage_pickup.ogg").await.unwrap();
-        let sfx_garbage_dispose_partial = load_sound("assets/sfx/garbage_dispose_partial.ogg").await.unwrap();
-        let sfx_garbage_dispose_full = load_sound("assets/sfx/garbage_dispose_full.ogg").await.unwrap();
+        let sfx_garbage_dispose_partial = load_sound("assets/sfx/garbage_dispose_partial.ogg")
+            .await
+            .unwrap();
+        let sfx_garbage_dispose_full = load_sound("assets/sfx/garbage_dispose_full.ogg")
+            .await
+            .unwrap();
         let sfx_track_place = load_sound("assets/sfx/track_place.ogg").await.unwrap();
         let sfx_track_remove = load_sound("assets/sfx/track_remove.ogg").await.unwrap();
         let sfx_explosion = load_sound("assets/sfx/explosion_01.ogg").await.unwrap();
@@ -493,7 +490,6 @@ impl GameState {
             levels,
 
             selected_tile,
-            last_hovered_card,
 
             count_track_h,
             count_track_v,
@@ -589,8 +585,6 @@ impl GameState {
             music_volume: 0.0,
             music_target_volume: 0.0,
 
-            sfx_level_transition,
-            sfx_ui_hover,
             sfx_ui_selection,
             sfx_ui_dialog_open,
             sfx_garbage_pickup,
@@ -655,8 +649,6 @@ impl GameState {
             TileType::TunnelRightOpen | TileType::TunnelRightClosed => {
                 &self.texture_mountain_tunnel_r
             }
-
-            _ => &self.texture_placeholder,
         }
     }
 
