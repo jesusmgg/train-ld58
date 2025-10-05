@@ -40,7 +40,9 @@ pub enum TileType {
     TrackCornerDR,
 
     // Obstacles
-    Rock,
+    Rock1,
+    House1,
+    House2,
 
     // Garbage system
     GarbagePickup,
@@ -90,6 +92,11 @@ pub struct GameState {
     pub texture_track_corner_dl: Texture2D,
     pub texture_track_corner_dr: Texture2D,
     pub texture_placeholder: Texture2D,
+
+    // Obstacles
+    pub texture_rock_1: Texture2D,
+    pub texture_house_1: Texture2D,
+    pub texture_house_2: Texture2D,
 
     // Mountain borders
     pub texture_mountain_border_u: Texture2D,
@@ -193,6 +200,11 @@ impl GameState {
         let texture_placeholder = load_texture("assets/sprites/placeholder.png")
             .await
             .unwrap();
+
+        // Obstacles
+        let texture_rock_1 = load_texture("assets/sprites/rock_001.png").await.unwrap();
+        let texture_house_1 = load_texture("assets/sprites/house_001.png").await.unwrap();
+        let texture_house_2 = load_texture("assets/sprites/house_002.png").await.unwrap();
 
         // Mountain borders
         let texture_mountain_border_u = load_texture("assets/sprites/mountain_border_u.png")
@@ -327,6 +339,10 @@ impl GameState {
             texture_track_corner_dr,
             texture_placeholder,
 
+            texture_rock_1,
+            texture_house_1,
+            texture_house_2,
+
             texture_mountain_border_u,
             texture_mountain_border_d,
             texture_mountain_border_l,
@@ -390,6 +406,10 @@ impl GameState {
             TileType::TrackCornerDL => &self.texture_track_corner_dl,
             TileType::TrackCornerDR => &self.texture_track_corner_dr,
 
+            TileType::Rock1 => &self.texture_rock_1,
+            TileType::House1 => &self.texture_house_1,
+            TileType::House2 => &self.texture_house_2,
+
             TileType::MountainBorderUp => &self.texture_mountain_border_u,
             TileType::MountainBorderDown => &self.texture_mountain_border_d,
             TileType::MountainBorderLeft => &self.texture_mountain_border_l,
@@ -433,6 +453,9 @@ impl GameState {
                 | TileType::TunnelLeftClosed
                 | TileType::TunnelRightOpen
                 | TileType::TunnelRightClosed
+                | TileType::Rock1
+                | TileType::House1
+                | TileType::House2
         )
     }
 
@@ -473,616 +496,629 @@ impl GameState {
 
         // Level 1-1 (grid 0,0 - has neighbors: right 1-2, down 2-1)
         // Default start: right tunnel (first one at h/3)
-        let mut level = Level::new("1-1", grid_size, f32::vec2(0.0, 0.0), IVec2::new(w, h / 3));
-        level
+        let mut level11 = Level::new("1-1", grid_size, f32::vec2(0.0, 0.0), IVec2::new(w, h / 3));
+        level11
             .tile_layout
             .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerDL);
-        level
+        level11
             .tile_layout
             .insert(IVec2::new(w, -1), TileType::MountainBorderCornerDR);
-        level
+        level11
             .tile_layout
             .insert(IVec2::new(-1, h), TileType::MountainBorderCornerUL);
-        level
+        level11
             .tile_layout
             .insert(IVec2::new(w, h), TileType::MountainBorderCornerUR);
         for x in 0..w {
-            level
+            level11
                 .tile_layout
                 .insert(IVec2::new(x, -1), TileType::MountainBorderDown);
         }
         for x in 0..w {
             if x == w / 3 {
-                level
+                level11
                     .tile_layout
                     .insert(IVec2::new(x, h), TileType::TunnelDownOpen);
             } else if x == 2 * w / 3 {
-                level
+                level11
                     .tile_layout
                     .insert(IVec2::new(x, h), TileType::TunnelDownClosed);
             } else {
-                level
+                level11
                     .tile_layout
                     .insert(IVec2::new(x, h), TileType::MountainBorderUp);
             }
         }
         for y in 0..h {
-            level
+            level11
                 .tile_layout
                 .insert(IVec2::new(-1, y), TileType::MountainBorderLeft);
         }
         for y in 0..h {
             if y == h / 3 {
-                level
+                level11
                     .tile_layout
                     .insert(IVec2::new(w, y), TileType::TunnelRightOpen);
             } else if y == 2 * h / 3 {
-                level
+                level11
                     .tile_layout
                     .insert(IVec2::new(w, y), TileType::TunnelRightClosed);
             } else {
-                level
+                level11
                     .tile_layout
                     .insert(IVec2::new(w, y), TileType::MountainBorderRight);
             }
         }
-        levels.push(level);
+        // Add obstacles
+        level11
+            .tile_layout
+            .insert(IVec2::new(3, 2), TileType::Rock1);
+        level11
+            .tile_layout
+            .insert(IVec2::new(8, 1), TileType::House1);
+        level11
+            .tile_layout
+            .insert(IVec2::new(5, 4), TileType::House2);
+        level11
+            .tile_layout
+            .insert(IVec2::new(9, 5), TileType::Rock1);
+        levels.push(level11);
 
         // Level 1-2 (grid 1,0 - has neighbors: left 1-1, right 1-3, down 2-2)
         // Default start: left tunnel (first one at h/3)
-        let mut level = Level::new(
+        let mut level12 = Level::new(
             "1-2",
             grid_size,
             f32::vec2(SCREEN_W, 0.0),
             IVec2::new(-1, h / 3),
         );
-        level
+        level12
             .tile_layout
             .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerDL);
-        level
+        level12
             .tile_layout
             .insert(IVec2::new(w, -1), TileType::MountainBorderCornerDR);
-        level
+        level12
             .tile_layout
             .insert(IVec2::new(-1, h), TileType::MountainBorderCornerUL);
-        level
+        level12
             .tile_layout
             .insert(IVec2::new(w, h), TileType::MountainBorderCornerUR);
         for x in 0..w {
-            level
+            level12
                 .tile_layout
                 .insert(IVec2::new(x, -1), TileType::MountainBorderDown);
         }
         for x in 0..w {
             if x == w / 3 {
-                level
+                level12
                     .tile_layout
                     .insert(IVec2::new(x, h), TileType::TunnelDownOpen);
             } else if x == 2 * w / 3 {
-                level
+                level12
                     .tile_layout
                     .insert(IVec2::new(x, h), TileType::TunnelDownClosed);
             } else {
-                level
+                level12
                     .tile_layout
                     .insert(IVec2::new(x, h), TileType::MountainBorderUp);
             }
         }
         for y in 0..h {
             if y == h / 3 {
-                level
+                level12
                     .tile_layout
                     .insert(IVec2::new(-1, y), TileType::TunnelLeftOpen);
             } else if y == 2 * h / 3 {
-                level
+                level12
                     .tile_layout
                     .insert(IVec2::new(-1, y), TileType::TunnelLeftClosed);
             } else {
-                level
+                level12
                     .tile_layout
                     .insert(IVec2::new(-1, y), TileType::MountainBorderLeft);
             }
         }
         for y in 0..h {
             if y == h / 3 {
-                level
+                level12
                     .tile_layout
                     .insert(IVec2::new(w, y), TileType::TunnelRightOpen);
             } else if y == 2 * h / 3 {
-                level
+                level12
                     .tile_layout
                     .insert(IVec2::new(w, y), TileType::TunnelRightClosed);
             } else {
-                level
+                level12
                     .tile_layout
                     .insert(IVec2::new(w, y), TileType::MountainBorderRight);
             }
         }
-        levels.push(level);
+        levels.push(level12);
 
         // Level 1-3 (grid 2,0 - has neighbors: left 1-2, down 2-3)
         // Default start: left tunnel (first one at h/3)
-        let mut level = Level::new(
+        let mut level13 = Level::new(
             "1-3",
             grid_size,
             f32::vec2(SCREEN_W * 2.0, 0.0),
             IVec2::new(-1, h / 3),
         );
-        level
+        level13
             .tile_layout
             .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerDL);
-        level
+        level13
             .tile_layout
             .insert(IVec2::new(w, -1), TileType::MountainBorderCornerDR);
-        level
+        level13
             .tile_layout
             .insert(IVec2::new(-1, h), TileType::MountainBorderCornerUL);
-        level
+        level13
             .tile_layout
             .insert(IVec2::new(w, h), TileType::MountainBorderCornerUR);
         for x in 0..w {
-            level
+            level13
                 .tile_layout
                 .insert(IVec2::new(x, -1), TileType::MountainBorderDown);
         }
         for x in 0..w {
             if x == w / 3 {
-                level
+                level13
                     .tile_layout
                     .insert(IVec2::new(x, h), TileType::TunnelDownOpen);
             } else if x == 2 * w / 3 {
-                level
+                level13
                     .tile_layout
                     .insert(IVec2::new(x, h), TileType::TunnelDownClosed);
             } else {
-                level
+                level13
                     .tile_layout
                     .insert(IVec2::new(x, h), TileType::MountainBorderUp);
             }
         }
         for y in 0..h {
             if y == h / 3 {
-                level
+                level13
                     .tile_layout
                     .insert(IVec2::new(-1, y), TileType::TunnelLeftOpen);
             } else if y == 2 * h / 3 {
-                level
+                level13
                     .tile_layout
                     .insert(IVec2::new(-1, y), TileType::TunnelLeftClosed);
             } else {
-                level
+                level13
                     .tile_layout
                     .insert(IVec2::new(-1, y), TileType::MountainBorderLeft);
             }
         }
         for y in 0..h {
-            level
+            level13
                 .tile_layout
                 .insert(IVec2::new(w, y), TileType::MountainBorderRight);
         }
-        levels.push(level);
+        levels.push(level13);
 
         // Level 2-1 (grid 0,1 - has neighbors: up 1-1, right 2-2, down 3-1)
         // Default start: top tunnel (first one at w/3)
-        let mut level = Level::new(
+        let mut level21 = Level::new(
             "2-1",
             grid_size,
             f32::vec2(0.0, SCREEN_H),
             IVec2::new(w / 3, -1),
         );
-        level
+        level21
             .tile_layout
             .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerDL);
-        level
+        level21
             .tile_layout
             .insert(IVec2::new(w, -1), TileType::MountainBorderCornerDR);
-        level
+        level21
             .tile_layout
             .insert(IVec2::new(-1, h), TileType::MountainBorderCornerUL);
-        level
+        level21
             .tile_layout
             .insert(IVec2::new(w, h), TileType::MountainBorderCornerUR);
         for x in 0..w {
             if x == w / 3 {
-                level
+                level21
                     .tile_layout
                     .insert(IVec2::new(x, -1), TileType::TunnelUpOpen);
             } else if x == 2 * w / 3 {
-                level
+                level21
                     .tile_layout
                     .insert(IVec2::new(x, -1), TileType::TunnelUpClosed);
             } else {
-                level
+                level21
                     .tile_layout
                     .insert(IVec2::new(x, -1), TileType::MountainBorderDown);
             }
         }
         for x in 0..w {
             if x == w / 3 {
-                level
+                level21
                     .tile_layout
                     .insert(IVec2::new(x, h), TileType::TunnelDownOpen);
             } else if x == 2 * w / 3 {
-                level
+                level21
                     .tile_layout
                     .insert(IVec2::new(x, h), TileType::TunnelDownClosed);
             } else {
-                level
+                level21
                     .tile_layout
                     .insert(IVec2::new(x, h), TileType::MountainBorderUp);
             }
         }
         for y in 0..h {
-            level
+            level21
                 .tile_layout
                 .insert(IVec2::new(-1, y), TileType::MountainBorderLeft);
         }
         for y in 0..h {
             if y == h / 3 {
-                level
+                level21
                     .tile_layout
                     .insert(IVec2::new(w, y), TileType::TunnelRightOpen);
             } else if y == 2 * h / 3 {
-                level
+                level21
                     .tile_layout
                     .insert(IVec2::new(w, y), TileType::TunnelRightClosed);
             } else {
-                level
+                level21
                     .tile_layout
                     .insert(IVec2::new(w, y), TileType::MountainBorderRight);
             }
         }
-        levels.push(level);
+        levels.push(level21);
 
         // Level 2-2 (grid 1,1 - has neighbors: up 1-2, left 2-1, right 2-3, down 3-2)
         // Default start: top tunnel (first one at w/3)
-        let mut level = Level::new(
+        let mut level22 = Level::new(
             "2-2",
             grid_size,
             f32::vec2(SCREEN_W, SCREEN_H),
             IVec2::new(w / 3, -1),
         );
-        level
+        level22
             .tile_layout
             .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerDL);
-        level
+        level22
             .tile_layout
             .insert(IVec2::new(w, -1), TileType::MountainBorderCornerDR);
-        level
+        level22
             .tile_layout
             .insert(IVec2::new(-1, h), TileType::MountainBorderCornerUL);
-        level
+        level22
             .tile_layout
             .insert(IVec2::new(w, h), TileType::MountainBorderCornerUR);
         for x in 0..w {
             if x == w / 3 {
-                level
+                level22
                     .tile_layout
                     .insert(IVec2::new(x, -1), TileType::TunnelUpOpen);
             } else if x == 2 * w / 3 {
-                level
+                level22
                     .tile_layout
                     .insert(IVec2::new(x, -1), TileType::TunnelUpClosed);
             } else {
-                level
+                level22
                     .tile_layout
                     .insert(IVec2::new(x, -1), TileType::MountainBorderDown);
             }
         }
         for x in 0..w {
             if x == w / 3 {
-                level
+                level22
                     .tile_layout
                     .insert(IVec2::new(x, h), TileType::TunnelDownOpen);
             } else if x == 2 * w / 3 {
-                level
+                level22
                     .tile_layout
                     .insert(IVec2::new(x, h), TileType::TunnelDownClosed);
             } else {
-                level
+                level22
                     .tile_layout
                     .insert(IVec2::new(x, h), TileType::MountainBorderUp);
             }
         }
         for y in 0..h {
             if y == h / 3 {
-                level
+                level22
                     .tile_layout
                     .insert(IVec2::new(-1, y), TileType::TunnelLeftOpen);
             } else if y == 2 * h / 3 {
-                level
+                level22
                     .tile_layout
                     .insert(IVec2::new(-1, y), TileType::TunnelLeftClosed);
             } else {
-                level
+                level22
                     .tile_layout
                     .insert(IVec2::new(-1, y), TileType::MountainBorderLeft);
             }
         }
         for y in 0..h {
             if y == h / 3 {
-                level
+                level22
                     .tile_layout
                     .insert(IVec2::new(w, y), TileType::TunnelRightOpen);
             } else if y == 2 * h / 3 {
-                level
+                level22
                     .tile_layout
                     .insert(IVec2::new(w, y), TileType::TunnelRightClosed);
             } else {
-                level
+                level22
                     .tile_layout
                     .insert(IVec2::new(w, y), TileType::MountainBorderRight);
             }
         }
-        levels.push(level);
+        levels.push(level22);
 
         // Level 2-3 (grid 2,1 - has neighbors: up 1-3, left 2-2, down 3-3)
         // Default start: top tunnel (first one at w/3)
-        let mut level = Level::new(
+        let mut level23 = Level::new(
             "2-3",
             grid_size,
             f32::vec2(SCREEN_W * 2.0, SCREEN_H),
             IVec2::new(w / 3, -1),
         );
-        level
+        level23
             .tile_layout
             .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerDL);
-        level
+        level23
             .tile_layout
             .insert(IVec2::new(w, -1), TileType::MountainBorderCornerDR);
-        level
+        level23
             .tile_layout
             .insert(IVec2::new(-1, h), TileType::MountainBorderCornerUL);
-        level
+        level23
             .tile_layout
             .insert(IVec2::new(w, h), TileType::MountainBorderCornerUR);
         for x in 0..w {
             if x == w / 3 {
-                level
+                level23
                     .tile_layout
                     .insert(IVec2::new(x, -1), TileType::TunnelUpOpen);
             } else if x == 2 * w / 3 {
-                level
+                level23
                     .tile_layout
                     .insert(IVec2::new(x, -1), TileType::TunnelUpClosed);
             } else {
-                level
+                level23
                     .tile_layout
                     .insert(IVec2::new(x, -1), TileType::MountainBorderDown);
             }
         }
         for x in 0..w {
             if x == w / 3 {
-                level
+                level23
                     .tile_layout
                     .insert(IVec2::new(x, h), TileType::TunnelDownOpen);
             } else if x == 2 * w / 3 {
-                level
+                level23
                     .tile_layout
                     .insert(IVec2::new(x, h), TileType::TunnelDownClosed);
             } else {
-                level
+                level23
                     .tile_layout
                     .insert(IVec2::new(x, h), TileType::MountainBorderUp);
             }
         }
         for y in 0..h {
             if y == h / 3 {
-                level
+                level23
                     .tile_layout
                     .insert(IVec2::new(-1, y), TileType::TunnelLeftOpen);
             } else if y == 2 * h / 3 {
-                level
+                level23
                     .tile_layout
                     .insert(IVec2::new(-1, y), TileType::TunnelLeftClosed);
             } else {
-                level
+                level23
                     .tile_layout
                     .insert(IVec2::new(-1, y), TileType::MountainBorderLeft);
             }
         }
         for y in 0..h {
-            level
+            level23
                 .tile_layout
                 .insert(IVec2::new(w, y), TileType::MountainBorderRight);
         }
-        levels.push(level);
+        levels.push(level23);
 
         // Level 3-1 (grid 0,2 - has neighbors: up 2-1, right 3-2)
         // Default start: top tunnel (first one at w/3)
-        let mut level = Level::new(
+        let mut level31 = Level::new(
             "3-1",
             grid_size,
             f32::vec2(0.0, SCREEN_H * 2.0),
             IVec2::new(w / 3, -1),
         );
-        level
+        level31
             .tile_layout
             .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerDL);
-        level
+        level31
             .tile_layout
             .insert(IVec2::new(w, -1), TileType::MountainBorderCornerDR);
-        level
+        level31
             .tile_layout
             .insert(IVec2::new(-1, h), TileType::MountainBorderCornerUL);
-        level
+        level31
             .tile_layout
             .insert(IVec2::new(w, h), TileType::MountainBorderCornerUR);
         for x in 0..w {
             if x == w / 3 {
-                level
+                level31
                     .tile_layout
                     .insert(IVec2::new(x, -1), TileType::TunnelUpOpen);
             } else if x == 2 * w / 3 {
-                level
+                level31
                     .tile_layout
                     .insert(IVec2::new(x, -1), TileType::TunnelUpClosed);
             } else {
-                level
+                level31
                     .tile_layout
                     .insert(IVec2::new(x, -1), TileType::MountainBorderDown);
             }
         }
         for x in 0..w {
-            level
+            level31
                 .tile_layout
                 .insert(IVec2::new(x, h), TileType::MountainBorderUp);
         }
         for y in 0..h {
-            level
+            level31
                 .tile_layout
                 .insert(IVec2::new(-1, y), TileType::MountainBorderLeft);
         }
         for y in 0..h {
             if y == h / 3 {
-                level
+                level31
                     .tile_layout
                     .insert(IVec2::new(w, y), TileType::TunnelRightOpen);
             } else if y == 2 * h / 3 {
-                level
+                level31
                     .tile_layout
                     .insert(IVec2::new(w, y), TileType::TunnelRightClosed);
             } else {
-                level
+                level31
                     .tile_layout
                     .insert(IVec2::new(w, y), TileType::MountainBorderRight);
             }
         }
-        levels.push(level);
+        levels.push(level31);
 
         // Level 3-2 (grid 1,2 - has neighbors: up 2-2, left 3-1, right 3-3)
         // Default start: top tunnel (first one at w/3)
-        let mut level = Level::new(
+        let mut level32 = Level::new(
             "3-2",
             grid_size,
             f32::vec2(SCREEN_W, SCREEN_H * 2.0),
             IVec2::new(w / 3, -1),
         );
-        level
+        level32
             .tile_layout
             .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerDL);
-        level
+        level32
             .tile_layout
             .insert(IVec2::new(w, -1), TileType::MountainBorderCornerDR);
-        level
+        level32
             .tile_layout
             .insert(IVec2::new(-1, h), TileType::MountainBorderCornerUL);
-        level
+        level32
             .tile_layout
             .insert(IVec2::new(w, h), TileType::MountainBorderCornerUR);
         for x in 0..w {
             if x == w / 3 {
-                level
+                level32
                     .tile_layout
                     .insert(IVec2::new(x, -1), TileType::TunnelUpOpen);
             } else if x == 2 * w / 3 {
-                level
+                level32
                     .tile_layout
                     .insert(IVec2::new(x, -1), TileType::TunnelUpClosed);
             } else {
-                level
+                level32
                     .tile_layout
                     .insert(IVec2::new(x, -1), TileType::MountainBorderDown);
             }
         }
         for x in 0..w {
-            level
+            level32
                 .tile_layout
                 .insert(IVec2::new(x, h), TileType::MountainBorderUp);
         }
         for y in 0..h {
             if y == h / 3 {
-                level
+                level32
                     .tile_layout
                     .insert(IVec2::new(-1, y), TileType::TunnelLeftOpen);
             } else if y == 2 * h / 3 {
-                level
+                level32
                     .tile_layout
                     .insert(IVec2::new(-1, y), TileType::TunnelLeftClosed);
             } else {
-                level
+                level32
                     .tile_layout
                     .insert(IVec2::new(-1, y), TileType::MountainBorderLeft);
             }
         }
         for y in 0..h {
             if y == h / 3 {
-                level
+                level32
                     .tile_layout
                     .insert(IVec2::new(w, y), TileType::TunnelRightOpen);
             } else if y == 2 * h / 3 {
-                level
+                level32
                     .tile_layout
                     .insert(IVec2::new(w, y), TileType::TunnelRightClosed);
             } else {
-                level
+                level32
                     .tile_layout
                     .insert(IVec2::new(w, y), TileType::MountainBorderRight);
             }
         }
-        levels.push(level);
+        levels.push(level32);
 
         // Level 3-3 (grid 2,2 - has neighbors: up 2-3, left 3-2)
         // Default start: top tunnel (first one at w/3)
-        let mut level = Level::new(
+        let mut level33 = Level::new(
             "3-3",
             grid_size,
             f32::vec2(SCREEN_W * 2.0, SCREEN_H * 2.0),
             IVec2::new(w / 3, -1),
         );
-        level
+        level33
             .tile_layout
             .insert(IVec2::new(-1, -1), TileType::MountainBorderCornerDL);
-        level
+        level33
             .tile_layout
             .insert(IVec2::new(w, -1), TileType::MountainBorderCornerDR);
-        level
+        level33
             .tile_layout
             .insert(IVec2::new(-1, h), TileType::MountainBorderCornerUL);
-        level
+        level33
             .tile_layout
             .insert(IVec2::new(w, h), TileType::MountainBorderCornerUR);
         for x in 0..w {
             if x == w / 3 {
-                level
+                level33
                     .tile_layout
                     .insert(IVec2::new(x, -1), TileType::TunnelUpOpen);
             } else if x == 2 * w / 3 {
-                level
+                level33
                     .tile_layout
                     .insert(IVec2::new(x, -1), TileType::TunnelUpClosed);
             } else {
-                level
+                level33
                     .tile_layout
                     .insert(IVec2::new(x, -1), TileType::MountainBorderDown);
             }
         }
         for x in 0..w {
-            level
+            level33
                 .tile_layout
                 .insert(IVec2::new(x, h), TileType::MountainBorderUp);
         }
         for y in 0..h {
             if y == h / 3 {
-                level
+                level33
                     .tile_layout
                     .insert(IVec2::new(-1, y), TileType::TunnelLeftOpen);
             } else if y == 2 * h / 3 {
-                level
+                level33
                     .tile_layout
                     .insert(IVec2::new(-1, y), TileType::TunnelLeftClosed);
             } else {
-                level
+                level33
                     .tile_layout
                     .insert(IVec2::new(-1, y), TileType::MountainBorderLeft);
             }
         }
         for y in 0..h {
-            level
+            level33
                 .tile_layout
                 .insert(IVec2::new(w, y), TileType::MountainBorderRight);
         }
-        levels.push(level);
+        levels.push(level33);
 
         levels
     }

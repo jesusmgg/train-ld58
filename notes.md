@@ -1,9 +1,6 @@
 ## Graphics pending:
-- Houses.
 - Dumpsters.
 - Recycling plant.
-- Rocks.
-- Water.
 - Smoke particles.
 
 ## Pending
