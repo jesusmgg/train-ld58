@@ -3,7 +3,8 @@
     "allow": [
       "Bash(cargo check:*)",
       "WebSearch",
-      "WebFetch(domain:docs.rs)"
+      "WebFetch(domain:docs.rs)",
+      "WebFetch(domain:github.com)"
     ],
     "deny": [],
     "ask": []

@@ -5,14 +5,31 @@ mod text;
 
 use constants::*;
 use game_state::{GameState, TileType, TrainDirection, TrainState};
+use macroquad::experimental::coroutines::start_coroutine;
 use macroquad::{math::Rect, prelude::*};
+use styles::Styles;
 use text::draw_scaled_text;
 
 #[macroquad::main("Clean Line")]
 async fn main() {
     configure();
 
-    let mut game_state = GameState::new().await;
+    // Load minimal assets for loading screen
+    let styles = Styles::new();
+    let font = load_ttf_font("assets/fonts/KenneyPixel.ttf").await.unwrap();
+
+    // Start loading coroutine (clone font to move into coroutine)
+    let font_clone = font.clone();
+    let loading = start_coroutine(async move { GameState::new(font_clone).await });
+
+    // Render loading screen while assets load
+    while !loading.is_done() {
+        render_loading_screen(&styles, &font);
+        next_frame().await;
+    }
+
+    // Retrieve loaded GameState
+    let mut game_state = loading.retrieve().unwrap();
 
     loop {
         // Input
@@ -68,6 +85,77 @@ async fn main() {
 
         next_frame().await
     }
+}
+
+fn render_loading_screen(styles: &Styles, font: &macroquad::text::Font) {
+    set_default_camera();
+    clear_background(styles.colors.green_4);
+
+    // Calculate integer zoom factor for pixel perfect rendering (same as camera)
+    let zoom = ((screen_width() as i32 / SCREEN_W as i32)
+        .min(screen_height() as i32 / SCREEN_H as i32)) as i32;
+
+    let zoomed_w = (SCREEN_W as i32) * zoom;
+    let zoomed_h = (SCREEN_H as i32) * zoom;
+
+    // Center on screen
+    let x_offset = ((screen_width() as i32 - zoomed_w) / 2) as f32;
+    let y_offset = ((screen_height() as i32 - zoomed_h) / 2) as f32;
+
+    // Message box dimensions (in virtual coordinates)
+    let font_size = 16.0;
+    let box_width = 148.0;
+    let box_height = 20.0;
+    let box_x = (SCREEN_W - box_width) / 2.0;
+    let box_y = (SCREEN_H - box_height) / 2.0;
+
+    let screen_box_x = x_offset + (box_x * zoom as f32);
+    let screen_box_y = y_offset + (box_y * zoom as f32);
+
+    // Border
+    draw_rectangle(
+        screen_box_x - 2.0 * zoom as f32,
+        screen_box_y - 2.0 * zoom as f32,
+        (box_width + 4.0) * zoom as f32,
+        (box_height + 4.0) * zoom as f32,
+        styles.colors.brown_3,
+    );
+
+    // Background - cycle through yellow colors for feedback
+    let cycle_time = 0.5; // Seconds per color
+    let color_index = (get_time() / cycle_time) as usize % 3;
+    let bg_color = match color_index {
+        0 => styles.colors.yellow_1,
+        1 => styles.colors.yellow_2,
+        2 => styles.colors.yellow_3,
+        _ => styles.colors.yellow_1,
+    };
+
+    draw_rectangle(
+        screen_box_x,
+        screen_box_y,
+        box_width * zoom as f32,
+        box_height * zoom as f32,
+        bg_color,
+    );
+
+    // Text - measure and center
+    let text = "LOADING...";
+    let text_dims = measure_text(text, Some(font), font_size as u16, 1.0);
+
+    let text_x = box_x + (box_width - text_dims.width) / 2.0;
+    let text_y = box_y + (box_height - text_dims.height) / 2.0 + text_dims.offset_y;
+    let screen_text_x = x_offset + (text_x * zoom as f32);
+    let screen_text_y = y_offset + (text_y * zoom as f32);
+
+    draw_scaled_text(
+        text,
+        screen_text_x,
+        screen_text_y,
+        font_size * zoom as f32,
+        &styles.colors.brown_3,
+        font,
+    );
 }
 
 fn update_train_input(game_state: &mut GameState) {
