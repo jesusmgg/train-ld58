@@ -1,5 +1,6 @@
 Clean Line
 ===
+<img width="1553" height="880" alt="2025-10-05_19-25" src="https://github.com/user-attachments/assets/0bc5f903-5d01-40ca-ba18-c03c456fd400" />
 
 Game made for the Ludum Dare 58 Compo.
 
