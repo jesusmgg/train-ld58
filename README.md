@@ -3,7 +3,15 @@ Clean Line
 
 Game made for the Ludum Dare 58 Compo.
 
-Description will go here.
+Build railroads, collect garbage, and take it to the recycling centers.
+
+Fill all recycling centers to win.
+
+- Mouse controls to build.
+- Space to start/stop your train.
+- R to reset the current level.
+- H for in-game help.
+
 
 ## Building
 The game requires only the standard Rust toolchain with the `wasm32-unknown-unknown` target installed.
