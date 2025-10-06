@@ -106,14 +106,18 @@
     resizeCanvas();
   </script>
   <script>
+    // Intercept WebAssembly.instantiate to know when WASM is loaded
+    const originalInstantiate = WebAssembly.instantiate;
+    WebAssembly.instantiate = function(...args) {
+      return originalInstantiate.apply(this, args).then(result => {
+        // WASM instantiated, hide loading screen
+        document.getElementById('loading').classList.add('hidden');
+        return result;
+      });
+    };
+
     // Start loading WASM
     load("ld-58.wasm");
-
-    // Hide loading screen after 20 seconds
-    setTimeout(() => {
-      document.getElementById('loading').classList.add('hidden');
-      <!-- }, 0000); -->
-    }, 20000);
   </script>
 </body>
 
