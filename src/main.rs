@@ -294,6 +294,25 @@ fn update_debug_controls(game_state: &mut GameState) {
         game_state.debug_ui_visible = !game_state.debug_ui_visible;
     }
 
+    // F to fill a dropoff facility
+    if is_key_pressed(KeyCode::F) {
+        if let Some(level) = game_state.current_level_mut() {
+            // Find first non-full dropoff and fill it
+            for (_pos, tile) in level.tile_layout.iter_mut() {
+                match tile {
+                    TileType::GarbageDropoffEmpty
+                    | TileType::GarbageDropoffFull1
+                    | TileType::GarbageDropoffFull2 => {
+                        *tile = TileType::GarbageDropoffFull3;
+                        game_state.update_dropoff_counts();
+                        break;
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+
     // G to reset track pieces to standard amounts
     if is_key_pressed(KeyCode::G) {
         game_state.count_track_h = 10;
@@ -754,14 +773,17 @@ fn render_garbage_counters(game_state: &GameState) {
     let x_offset = ((screen_width() as i32 - zoomed_w) / 2) as f32;
     let y_offset = ((screen_height() as i32 - zoomed_h) / 2) as f32;
 
-    // Position on right side of screen
+    let font_size = 18.0;
+    let right_panel_width = 60.0; // Width of right panel area
+
+    // Dropoffs counter - measure and center in right panel
     let text = format!(
         "{}/{}",
         game_state.dropoffs_full_count, game_state.total_dropoffs_count
     );
-    let text_x = SCREEN_W - 40.0;
+    let text_dims = measure_text(&text, Some(&game_state.font), font_size as u16, 1.0);
+    let text_x = (SCREEN_W - right_panel_width) + (right_panel_width - text_dims.width) / 2.0;
     let text_y = 98.0;
-    let font_size = 18.0;
 
     let screen_x = x_offset + (text_x * zoom as f32);
     let screen_y = y_offset + (text_y * zoom as f32);
@@ -775,9 +797,11 @@ fn render_garbage_counters(game_state: &GameState) {
         &game_state.font,
     );
 
-    // Garbage held count below
-    let garbage_x = SCREEN_W - 36.0;
+    // Garbage held count - measure and center in right panel
     let garbage_text = format!("{}", game_state.garbage_held);
+    let garbage_dims =
+        measure_text(&garbage_text, Some(&game_state.font), font_size as u16, 1.0);
+    let garbage_x = (SCREEN_W - right_panel_width) + (right_panel_width - garbage_dims.width) / 2.0;
     let garbage_y = 170.0;
     let garbage_screen_x = x_offset + (garbage_x * zoom as f32);
     let garbage_screen_y = y_offset + (garbage_y * zoom as f32);
