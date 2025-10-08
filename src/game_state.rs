@@ -89,6 +89,26 @@ pub struct GameState {
 
     pub selected_tile: Option<TileType>,
 
+    pub train_tile_pos: IVec2, // Logical grid position within current level
+    pub train_pos_offset: f32::Vec2, // Smooth position offset from tile position (0.0 to 1.0)
+    pub train_direction: TrainDirection,
+    pub train_state: TrainState,
+    pub train_entry_tunnel: Option<IVec2>, // Tunnel position where train entered current level
+    pub train_anim_frame: u8,              // 0 or 1 for the two animation frames
+    pub train_anim_timer: f32,             // Timer for animation
+    pub garbage_held: i32,                 // Amount of garbage currently on the train
+    pub total_dropoffs_count: i32,         // Total number of dropoff sites across all levels
+    pub dropoffs_full_count: i32,          // Number of dropoff sites at Full3 (3/3) state
+    pub game_won: bool,                    // True when all dropoffs are full
+    pub message: Option<String>,           // Message to display in center of screen
+    pub skip_level_requirements: bool,     // Debug: skip level completion requirements
+    pub visited_levels: Vec<bool>,         // Track which levels have been visited
+    pub level_22_tunnel_timer: Option<f32>, // Timer for opening level 2-2 tunnels
+    pub level_22_tunnels_opened: bool,     // Whether level 2-2 tunnels have been opened
+    pub win_message_shown: bool,           // Whether the win message has been shown
+    pub help_message_shown: bool,          // Whether the help message has been shown
+    pub debug_ui_visible: bool,            // Whether debug UI is visible (debug builds only)
+
     // Track piece inventory counts
     pub count_track_h: i32,
     pub count_track_v: i32,
@@ -154,25 +174,6 @@ pub struct GameState {
     pub texture_train_u_002: Texture2D,
     pub texture_train_d_001: Texture2D,
     pub texture_train_d_002: Texture2D,
-    pub train_tile_pos: IVec2, // Logical grid position within current level
-    pub train_pos_offset: f32::Vec2, // Smooth position offset from tile position (0.0 to 1.0)
-    pub train_direction: TrainDirection,
-    pub train_state: TrainState,
-    pub train_entry_tunnel: Option<IVec2>, // Tunnel position where train entered current level
-    pub train_anim_frame: u8,              // 0 or 1 for the two animation frames
-    pub train_anim_timer: f32,             // Timer for animation
-    pub garbage_held: i32,                 // Amount of garbage currently on the train
-    pub total_dropoffs_count: i32,         // Total number of dropoff sites across all levels
-    pub dropoffs_full_count: i32,          // Number of dropoff sites at Full3 (3/3) state
-    pub game_won: bool,                    // True when all dropoffs are full
-    pub message: Option<String>,           // Message to display in center of screen
-    pub skip_level_requirements: bool,     // Debug: skip level completion requirements
-    pub visited_levels: Vec<bool>,         // Track which levels have been visited
-    pub level_22_tunnel_timer: Option<f32>, // Timer for opening level 2-2 tunnels
-    pub level_22_tunnels_opened: bool,     // Whether level 2-2 tunnels have been opened
-    pub win_message_shown: bool,           // Whether the win message has been shown
-    pub help_message_shown: bool,          // Whether the help message has been shown
-    pub debug_ui_visible: bool,            // Whether debug UI is visible (debug builds only)
 
     // UI
     pub texture_ui_overlay: Texture2D,
