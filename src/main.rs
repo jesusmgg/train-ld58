@@ -1,3 +1,4 @@
+mod asset_loader;
 mod asset_path;
 mod constants;
 mod game_state;

@@ -13,3 +13,8 @@ Have in mind that in debug build and my test setup `mq_js_bundle.js` alone takes
 - 18.71
 - 18.73
 - 18.59
+
+### Coroutine based texture and audio loaders
+- 15.56
+- 15.54
+- 15.49

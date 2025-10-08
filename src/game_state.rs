@@ -1,15 +1,14 @@
 use std::collections::HashMap;
 
 use macroquad::{
-    audio::load_sound,
     camera::{set_camera, Camera2D},
-    experimental::coroutines::start_coroutine,
     math::{f32, IVec2},
     text::Font,
-    texture::{load_texture, Texture2D},
-    window::{next_frame, screen_height, screen_width},
+    texture::Texture2D,
+    window::{screen_height, screen_width},
 };
 
+use crate::asset_loader::{load_audio_parallel, load_textures_parallel};
 use crate::asset_path;
 use crate::constants::*;
 use crate::styles::Styles;
@@ -206,29 +205,6 @@ pub struct GameState {
     pub sfx_explosion: macroquad::audio::Sound,
 }
 
-/// Load multiple textures in parallel using coroutines
-async fn load_textures_parallel(paths: Vec<String>) -> HashMap<String, Texture2D> {
-    // Spawn coroutines for each texture load
-    let mut loaders = Vec::new();
-    for path in paths.clone() {
-        let handle =
-            start_coroutine(async move { (path.clone(), load_texture(&path).await.unwrap()) });
-        loaders.push(handle);
-    }
-
-    // Wait for all coroutines to complete
-    loop {
-        let all_done = loaders.iter().all(|h| h.is_done());
-        if all_done {
-            break;
-        }
-        next_frame().await;
-    }
-
-    // Collect results into HashMap
-    loaders.into_iter().map(|h| h.retrieve().unwrap()).collect()
-}
-
 impl GameState {
     pub async fn new(font: Font) -> Self {
         let styles = Styles::new();
@@ -418,23 +394,35 @@ impl GameState {
         let texture_ui_card_track_dr = textures.remove(asset_path::UI_CARD_TRACK_DR).unwrap();
         let texture_ui_card_selection = textures.remove(asset_path::UI_CARD_SELECTION).unwrap();
 
-        // Load sound effects
-        let sfx_ui_selection = load_sound(asset_path::SFX_UI_SELECTION).await.unwrap();
-        let sfx_ui_dialog_open = load_sound(asset_path::SFX_UI_DIALOG_OPEN).await.unwrap();
-        let sfx_garbage_pickup = load_sound(asset_path::SFX_GARBAGE_PICKUP).await.unwrap();
-        let sfx_garbage_dispose_partial = load_sound(asset_path::SFX_GARBAGE_DISPOSE_PARTIAL)
-            .await
-            .unwrap();
-        let sfx_garbage_dispose_full = load_sound(asset_path::SFX_GARBAGE_DISPOSE_FULL)
-            .await
-            .unwrap();
-        let sfx_track_place = load_sound(asset_path::SFX_TRACK_PLACE).await.unwrap();
-        let sfx_track_remove = load_sound(asset_path::SFX_TRACK_REMOVE).await.unwrap();
-        let sfx_explosion = load_sound(asset_path::SFX_EXPLOSION).await.unwrap();
+        // Load all sounds in parallel
+        let sound_paths: Vec<String> = vec![
+            asset_path::SFX_UI_SELECTION,
+            asset_path::SFX_UI_DIALOG_OPEN,
+            asset_path::SFX_GARBAGE_PICKUP,
+            asset_path::SFX_GARBAGE_DISPOSE_PARTIAL,
+            asset_path::SFX_GARBAGE_DISPOSE_FULL,
+            asset_path::SFX_TRACK_PLACE,
+            asset_path::SFX_TRACK_REMOVE,
+            asset_path::SFX_EXPLOSION,
+            asset_path::MUSIC_TRAIN_RUNNING_1,
+            asset_path::MUSIC_TRAIN_RUNNING_2,
+        ]
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
 
-        // Load music tracks
-        let music_train_running_1 = load_sound(asset_path::MUSIC_TRAIN_RUNNING_1).await.unwrap();
-        let music_train_running_2 = load_sound(asset_path::MUSIC_TRAIN_RUNNING_2).await.unwrap();
+        let mut sounds = load_audio_parallel(sound_paths).await;
+
+        let sfx_ui_selection = sounds.remove(asset_path::SFX_UI_SELECTION).unwrap();
+        let sfx_ui_dialog_open = sounds.remove(asset_path::SFX_UI_DIALOG_OPEN).unwrap();
+        let sfx_garbage_pickup = sounds.remove(asset_path::SFX_GARBAGE_PICKUP).unwrap();
+        let sfx_garbage_dispose_partial = sounds.remove(asset_path::SFX_GARBAGE_DISPOSE_PARTIAL).unwrap();
+        let sfx_garbage_dispose_full = sounds.remove(asset_path::SFX_GARBAGE_DISPOSE_FULL).unwrap();
+        let sfx_track_place = sounds.remove(asset_path::SFX_TRACK_PLACE).unwrap();
+        let sfx_track_remove = sounds.remove(asset_path::SFX_TRACK_REMOVE).unwrap();
+        let sfx_explosion = sounds.remove(asset_path::SFX_EXPLOSION).unwrap();
+        let music_train_running_1 = sounds.remove(asset_path::MUSIC_TRAIN_RUNNING_1).unwrap();
+        let music_train_running_2 = sounds.remove(asset_path::MUSIC_TRAIN_RUNNING_2).unwrap();
 
         // Count total dropoffs across all levels
         let total_dropoffs_count = levels
