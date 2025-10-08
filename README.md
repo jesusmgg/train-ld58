@@ -30,7 +30,11 @@ Requires [live-server](https://www.npmjs.com/package/live-server).
 
 ```bash
 chmod +x dev-server.sh
+# Serve debug build
 ./dev-server.sh
+
+# Serve release build
+./dev-server.sh --release
 ```
 
-This will start the development web server, watch for debug builds and reload the browser window if there is a new one.
+This will start the development web server, watch for builds and reload the browser window if there is a new one.

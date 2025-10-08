@@ -3,6 +3,8 @@
 - Improved initial asset loading times (implemented parallelized loading).
 - Improved help menu text.
 - Removed softlock at level 1-1.
+- Added version display, improved debug tooling.
+- Dev server can now run release builds (`--release`).
 
 # v1.0.9-ld58
 - Version submitted to the Ludum Dare 58 Compo.
