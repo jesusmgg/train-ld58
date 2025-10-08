@@ -1,10 +1,10 @@
 # Asset Loading Optimization
 
-## Loading times baseline
+## Loading times analysis
 Doing three runs for each test. All times in seconds.
 Have in mind that in debug build and my test setup `mq_js_bundle.js` alone takes ~9.2s to load. we can disregard optimizing this.
 
-### Sequential naive loads with separate assets
+### Baseline: sequential naive loads with separate assets
 - 32.85
 - 32.86
 - 32.92
