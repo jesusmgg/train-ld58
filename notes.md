@@ -13,7 +13,6 @@
 ## Pending
 - Center and align all text.
 - Add arrow to point to stopped train.
-- Update help text.
 - Initial logo.
 - Game saving.
 - Delete track (bulldozer) button.
@@ -27,7 +26,6 @@
 - Game scale gets small with certain window sizes. May be OK.
 
 ## Design changes
-- Remove softlock at level 1-1.
 - Add GPS that gives player a minimap when picked up.
 
 ## Future improvements

@@ -55,6 +55,7 @@ async fn main() {
         check_garbage_dropoff(&mut game_state);
         update_train_animation(&mut game_state);
         update_level_22_tunnels(&mut game_state);
+        update_level_12_shortcut(&mut game_state);
         update_help_message(&mut game_state);
         update_music(&mut game_state);
         update_camera(&mut game_state);
@@ -1206,44 +1207,47 @@ fn update_train_movement(game_state: &mut GameState) {
                         };
 
                         if let Some(next_idx) = next_level_idx {
-                            // Check if current level has at least one full dropoff
-                            let current_level = &game_state.levels[current_idx];
-                            let has_full_dropoff = current_level
-                                .tile_layout
-                                .values()
-                                .any(|tile| matches!(tile, TileType::GarbageDropoffFull3));
+                            // Check if current level has at least one full dropoff (unless skipping requirements)
+                            if !game_state.skip_level_requirements {
+                                let current_level = &game_state.levels[current_idx];
+                                let has_full_dropoff = current_level
+                                    .tile_layout
+                                    .values()
+                                    .any(|tile| matches!(tile, TileType::GarbageDropoffFull3));
 
-                            if !has_full_dropoff {
-                                // Check if current level has any dropoffs at all
-                                let has_dropoffs = current_level.tile_layout.values().any(|tile| {
-                                    matches!(
-                                        tile,
-                                        TileType::GarbageDropoffEmpty
-                                            | TileType::GarbageDropoffFull1
-                                            | TileType::GarbageDropoffFull2
-                                            | TileType::GarbageDropoffFull3
-                                    )
-                                });
+                                if !has_full_dropoff {
+                                    // Check if current level has any dropoffs at all
+                                    let has_dropoffs =
+                                        current_level.tile_layout.values().any(|tile| {
+                                            matches!(
+                                                tile,
+                                                TileType::GarbageDropoffEmpty
+                                                    | TileType::GarbageDropoffFull1
+                                                    | TileType::GarbageDropoffFull2
+                                                    | TileType::GarbageDropoffFull3
+                                            )
+                                        });
 
-                                if has_dropoffs {
-                                    // Stop the train and show message
-                                    game_state.train_state = TrainState::Stopped;
-                                    game_state.message = Some(
-                                        "Fill at least one recycling center! <R> to reset train."
-                                            .to_string(),
-                                    );
+                                    if has_dropoffs {
+                                        // Stop the train and show message
+                                        game_state.train_state = TrainState::Stopped;
+                                        game_state.message = Some(
+                                            "Fill at least one recycling center! <R> to reset train."
+                                                .to_string(),
+                                        );
 
-                                    // Play dialog sound
-                                    use macroquad::audio::{play_sound, PlaySoundParams};
-                                    play_sound(
-                                        &game_state.sfx_ui_dialog_open,
-                                        PlaySoundParams {
-                                            looped: false,
-                                            volume: 0.4,
-                                        },
-                                    );
+                                        // Play dialog sound
+                                        use macroquad::audio::{play_sound, PlaySoundParams};
+                                        play_sound(
+                                            &game_state.sfx_ui_dialog_open,
+                                            PlaySoundParams {
+                                                looped: false,
+                                                volume: 0.4,
+                                            },
+                                        );
 
-                                    return;
+                                        return;
+                                    }
                                 }
                             }
 
@@ -1291,6 +1295,15 @@ fn update_train_movement(game_state: &mut GameState) {
                             game_state.train_tile_pos = arrival_pos;
                             game_state.train_pos_offset = f32::Vec2::ZERO;
                             game_state.train_entry_tunnel = Some(arrival_pos);
+
+                            // Check for level 1-2 shortcut trigger
+                            if next_idx == 1
+                                && arrival_pos.y == 2
+                                && game_state.train_direction == TrainDirection::Right
+                                && !game_state.level_12_shortcut_opened
+                            {
+                                game_state.level_12_shortcut_timer = Some(5.0);
+                            }
 
                             // Keep direction (train continues in same direction)
                             // Train state remains Running
@@ -1740,6 +1753,43 @@ fn update_level_22_tunnels(game_state: &mut GameState) {
 
                     // Show message to player
                     game_state.message = Some("All tunnels are now open!".to_string());
+                }
+            }
+        }
+    }
+}
+
+fn update_level_12_shortcut(game_state: &mut GameState) {
+    // Check if we're on level 1-2 (index 1) and haven't opened shortcut yet
+    if let Some(level_idx) = game_state.level_active {
+        if level_idx == 1 && !game_state.level_12_shortcut_opened {
+            // Update the timer if it's running
+            if let Some(timer) = &mut game_state.level_12_shortcut_timer {
+                *timer -= get_frame_time();
+
+                // When timer reaches 0, open the shortcut
+                if *timer <= 0.0 {
+                    game_state.level_12_shortcut_opened = true;
+                    game_state.level_12_shortcut_timer = None;
+
+                    // Remove rock at position (0, 2) in level 1-2
+                    if let Some(level) = game_state.levels.get_mut(1) {
+                        level.tile_layout.remove(&IVec2::new(0, 2));
+                    }
+
+                    // Play explosion sound
+                    use macroquad::audio::{play_sound, play_sound_once, PlaySoundParams};
+                    play_sound_once(&game_state.sfx_explosion);
+
+                    // Show message
+                    game_state.message = Some("Shortcut unlocked!".to_string());
+                    play_sound(
+                        &game_state.sfx_ui_dialog_open,
+                        PlaySoundParams {
+                            looped: false,
+                            volume: 0.4,
+                        },
+                    );
                 }
             }
         }

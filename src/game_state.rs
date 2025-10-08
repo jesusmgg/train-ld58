@@ -107,6 +107,8 @@ pub struct GameState {
     pub visited_levels: Vec<bool>,         // Track which levels have been visited
     pub level_22_tunnel_timer: Option<f32>, // Timer for opening level 2-2 tunnels
     pub level_22_tunnels_opened: bool,     // Whether level 2-2 tunnels have been opened
+    pub level_12_shortcut_timer: Option<f32>, // Timer for opening level 1-2 shortcut
+    pub level_12_shortcut_opened: bool,    // Whether level 1-2 shortcut has been opened
     pub win_message_shown: bool,           // Whether the win message has been shown
     pub help_message_shown: bool,          // Whether the help message has been shown
     pub debug_ui_visible: bool,            // Whether debug UI is visible (debug builds only)
@@ -538,6 +540,8 @@ impl GameState {
             visited_levels,
             level_22_tunnel_timer: None,
             level_22_tunnels_opened: false,
+            level_12_shortcut_timer: None,
+            level_12_shortcut_opened: false,
             win_message_shown: false,
             help_message_shown: false,
             debug_ui_visible: false,
