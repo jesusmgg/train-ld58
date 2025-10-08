@@ -1,6 +1,8 @@
 ## Graphics pending
 - Smoke particles.
 - Shadows for sprites.
+- Track selection hotkeys and instructions.
+- Bulldozer button.
 
 ## Sound pending
 - Train running
@@ -20,7 +22,6 @@
 - Help button.
 - Reset button.
 - Start/stop button.
-- Improve loading speed.
 
 ## Bugs
 - Loading screen is not showing.
@@ -29,5 +30,6 @@
 
 ## Design changes
 - Remove softlock at level 1-1.
+- Add GPS that gives player a minimap when picked up.
 
 ## Future improvements

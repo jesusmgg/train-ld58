@@ -300,24 +300,24 @@ fn update_debug_controls(game_state: &mut GameState) {
         game_state.count_track_dr = 5;
     }
 
-    // Number keys 0-8 to jump to level and reset pieces
-    let jump_to_level = if is_key_pressed(KeyCode::Key0) {
+    // F1-F9 keys to jump to level and reset pieces
+    let jump_to_level = if is_key_pressed(KeyCode::F1) {
         Some(0)
-    } else if is_key_pressed(KeyCode::Key1) {
+    } else if is_key_pressed(KeyCode::F2) {
         Some(1)
-    } else if is_key_pressed(KeyCode::Key2) {
+    } else if is_key_pressed(KeyCode::F3) {
         Some(2)
-    } else if is_key_pressed(KeyCode::Key3) {
+    } else if is_key_pressed(KeyCode::F4) {
         Some(3)
-    } else if is_key_pressed(KeyCode::Key4) {
+    } else if is_key_pressed(KeyCode::F5) {
         Some(4)
-    } else if is_key_pressed(KeyCode::Key5) {
+    } else if is_key_pressed(KeyCode::F6) {
         Some(5)
-    } else if is_key_pressed(KeyCode::Key6) {
+    } else if is_key_pressed(KeyCode::F7) {
         Some(6)
-    } else if is_key_pressed(KeyCode::Key7) {
+    } else if is_key_pressed(KeyCode::F8) {
         Some(7)
-    } else if is_key_pressed(KeyCode::Key8) {
+    } else if is_key_pressed(KeyCode::F9) {
         Some(8)
     } else {
         None
@@ -1816,7 +1816,55 @@ fn update_camera(game_state: &mut GameState) {
     }
 }
 
+fn try_select_track_card(game_state: &mut GameState, tile_type: TileType) -> bool {
+    // Check if we have pieces available
+    let count = game_state.get_track_count(tile_type);
+    if count <= 0 {
+        return false;
+    }
+
+    // Play selection sound
+    use macroquad::audio::{play_sound, PlaySoundParams};
+    play_sound(
+        &game_state.sfx_ui_selection,
+        PlaySoundParams {
+            looped: false,
+            volume: 0.4,
+        },
+    );
+
+    // Toggle selection: deselect if already selected, otherwise select
+    if game_state.selected_tile == Some(tile_type) {
+        game_state.selected_tile = None;
+    } else {
+        game_state.selected_tile = Some(tile_type);
+    }
+    true
+}
+
 fn update_ui_card_selection(game_state: &mut GameState) {
+    // Handle keyboard shortcuts for track piece selection (1-6)
+    let keyboard_selected = if is_key_pressed(KeyCode::Key1) {
+        Some(TileType::TrackHorizontal)
+    } else if is_key_pressed(KeyCode::Key2) {
+        Some(TileType::TrackVertical)
+    } else if is_key_pressed(KeyCode::Key3) {
+        Some(TileType::TrackCornerUL)
+    } else if is_key_pressed(KeyCode::Key4) {
+        Some(TileType::TrackCornerUR)
+    } else if is_key_pressed(KeyCode::Key5) {
+        Some(TileType::TrackCornerDL)
+    } else if is_key_pressed(KeyCode::Key6) {
+        Some(TileType::TrackCornerDR)
+    } else {
+        None
+    };
+
+    if let Some(tile_type) = keyboard_selected {
+        try_select_track_card(game_state, tile_type);
+        return;
+    }
+
     if !is_mouse_button_pressed(MouseButton::Left) {
         return;
     }
@@ -1858,29 +1906,9 @@ fn update_ui_card_selection(game_state: &mut GameState) {
             && mouse_screen.1 >= screen_y
             && mouse_screen.1 < screen_y + card_size
         {
-            // Check if we have pieces available
-            let count = game_state.get_track_count(*tile_type);
-            if count <= 0 {
+            if try_select_track_card(game_state, *tile_type) {
                 return;
             }
-
-            // Play selection sound
-            use macroquad::audio::{play_sound, PlaySoundParams};
-            play_sound(
-                &game_state.sfx_ui_selection,
-                PlaySoundParams {
-                    looped: false,
-                    volume: 0.4,
-                },
-            );
-
-            // Toggle selection: deselect if already selected, otherwise select
-            if game_state.selected_tile == Some(*tile_type) {
-                game_state.selected_tile = None;
-            } else {
-                game_state.selected_tile = Some(*tile_type);
-            }
-            return;
         }
     }
 }
