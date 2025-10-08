@@ -1,3 +1,4 @@
+mod asset_path;
 mod constants;
 mod game_state;
 mod styles;
@@ -16,7 +17,7 @@ async fn main() {
 
     // Load minimal assets for loading screen
     let styles = Styles::new();
-    let font = load_ttf_font("assets/fonts/KenneyPixel.ttf").await.unwrap();
+    let font = load_ttf_font(asset_path::FONT_KENNEY_PIXEL).await.unwrap();
 
     // Start loading coroutine (clone font to move into coroutine)
     let font_clone = font.clone();

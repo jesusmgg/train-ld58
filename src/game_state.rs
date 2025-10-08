@@ -7,9 +7,10 @@ use macroquad::{
     math::{f32, IVec2},
     text::Font,
     texture::{load_texture, Texture2D},
-    window::{screen_height, screen_width, next_frame},
+    window::{next_frame, screen_height, screen_width},
 };
 
+use crate::asset_path;
 use crate::constants::*;
 use crate::styles::Styles;
 
@@ -210,9 +211,8 @@ async fn load_textures_parallel(paths: Vec<String>) -> HashMap<String, Texture2D
     // Spawn coroutines for each texture load
     let mut loaders = Vec::new();
     for path in paths.clone() {
-        let handle = start_coroutine(async move {
-            (path.clone(), load_texture(&path).await.unwrap())
-        });
+        let handle =
+            start_coroutine(async move { (path.clone(), load_texture(&path).await.unwrap()) });
         loaders.push(handle);
     }
 
@@ -284,138 +284,157 @@ impl GameState {
 
         // Load all textures in parallel
         let texture_paths: Vec<String> = vec![
-            "assets/sprites/background.png",
-            "assets/sprites/track_h.png",
-            "assets/sprites/track_v.png",
-            "assets/sprites/track_corner_ul.png",
-            "assets/sprites/track_corner_ur.png",
-            "assets/sprites/track_corner_dl.png",
-            "assets/sprites/track_corner_dr.png",
-            "assets/sprites/rock_001.png",
-            "assets/sprites/house_001.png",
-            "assets/sprites/house_002.png",
-            "assets/sprites/garbage_full.png",
-            "assets/sprites/garbage_empty.png",
-            "assets/sprites/recyclying_center.png",
-            "assets/sprites/garbage_indicator_0.png",
-            "assets/sprites/garbage_indicator_1.png",
-            "assets/sprites/garbage_indicator_2.png",
-            "assets/sprites/garbage_indicator_3.png",
-            "assets/sprites/mountain_border_u.png",
-            "assets/sprites/mountain_border_d.png",
-            "assets/sprites/mountain_border_l.png",
-            "assets/sprites/mountain_border_r.png",
-            "assets/sprites/mountain_corner_ul.png",
-            "assets/sprites/mountain_corner_ur.png",
-            "assets/sprites/mountain_corner_dl.png",
-            "assets/sprites/mountain_corner_dr.png",
-            "assets/sprites/mountain_tunnel_u.png",
-            "assets/sprites/mountain_tunnel_d.png",
-            "assets/sprites/mountain_tunnel_l.png",
-            "assets/sprites/mountain_tunnel_r.png",
-            "assets/sprites/mountain_tunnel_hole_open_u.png",
-            "assets/sprites/mountain_tunnel_hole_open_d.png",
-            "assets/sprites/mountain_tunnel_hole_open_l.png",
-            "assets/sprites/mountain_tunnel_hole_open_r.png",
-            "assets/sprites/mountain_tunnel_hole_closed_u.png",
-            "assets/sprites/mountain_tunnel_hole_closed_d.png",
-            "assets/sprites/mountain_tunnel_hole_closed_l.png",
-            "assets/sprites/mountain_tunnel_hole_closed_r.png",
-            "assets/sprites/train_front_l_001.png",
-            "assets/sprites/train_front_l_002.png",
-            "assets/sprites/train_front_r_001.png",
-            "assets/sprites/train_front_r_002.png",
-            "assets/sprites/train_front_u_001.png",
-            "assets/sprites/train_front_u_002.png",
-            "assets/sprites/train_front_d_001.png",
-            "assets/sprites/train_front_d_002.png",
-            "assets/sprites/ui_overlay.png",
-            "assets/sprites/ui_card_track_h.png",
-            "assets/sprites/ui_card_track_v.png",
-            "assets/sprites/ui_card_track_ul.png",
-            "assets/sprites/ui_card_track_ur.png",
-            "assets/sprites/ui_card_track_dl.png",
-            "assets/sprites/ui_card_track_dr.png",
-            "assets/sprites/ui_card_selection.png",
-        ].iter().map(|s| s.to_string()).collect();
+            asset_path::BACKGROUND,
+            asset_path::TRACK_H,
+            asset_path::TRACK_V,
+            asset_path::TRACK_CORNER_UL,
+            asset_path::TRACK_CORNER_UR,
+            asset_path::TRACK_CORNER_DL,
+            asset_path::TRACK_CORNER_DR,
+            asset_path::ROCK_001,
+            asset_path::HOUSE_001,
+            asset_path::HOUSE_002,
+            asset_path::GARBAGE_FULL,
+            asset_path::GARBAGE_EMPTY,
+            asset_path::GARBAGE_DROPOFF,
+            asset_path::GARBAGE_INDICATOR_0,
+            asset_path::GARBAGE_INDICATOR_1,
+            asset_path::GARBAGE_INDICATOR_2,
+            asset_path::GARBAGE_INDICATOR_3,
+            asset_path::MOUNTAIN_BORDER_U,
+            asset_path::MOUNTAIN_BORDER_D,
+            asset_path::MOUNTAIN_BORDER_L,
+            asset_path::MOUNTAIN_BORDER_R,
+            asset_path::MOUNTAIN_CORNER_UL,
+            asset_path::MOUNTAIN_CORNER_UR,
+            asset_path::MOUNTAIN_CORNER_DL,
+            asset_path::MOUNTAIN_CORNER_DR,
+            asset_path::MOUNTAIN_TUNNEL_U,
+            asset_path::MOUNTAIN_TUNNEL_D,
+            asset_path::MOUNTAIN_TUNNEL_L,
+            asset_path::MOUNTAIN_TUNNEL_R,
+            asset_path::MOUNTAIN_TUNNEL_HOLE_OPEN_U,
+            asset_path::MOUNTAIN_TUNNEL_HOLE_OPEN_D,
+            asset_path::MOUNTAIN_TUNNEL_HOLE_OPEN_L,
+            asset_path::MOUNTAIN_TUNNEL_HOLE_OPEN_R,
+            asset_path::MOUNTAIN_TUNNEL_HOLE_CLOSED_U,
+            asset_path::MOUNTAIN_TUNNEL_HOLE_CLOSED_D,
+            asset_path::MOUNTAIN_TUNNEL_HOLE_CLOSED_L,
+            asset_path::MOUNTAIN_TUNNEL_HOLE_CLOSED_R,
+            asset_path::TRAIN_FRONT_L_001,
+            asset_path::TRAIN_FRONT_L_002,
+            asset_path::TRAIN_FRONT_R_001,
+            asset_path::TRAIN_FRONT_R_002,
+            asset_path::TRAIN_FRONT_U_001,
+            asset_path::TRAIN_FRONT_U_002,
+            asset_path::TRAIN_FRONT_D_001,
+            asset_path::TRAIN_FRONT_D_002,
+            asset_path::UI_OVERLAY,
+            asset_path::UI_CARD_TRACK_H,
+            asset_path::UI_CARD_TRACK_V,
+            asset_path::UI_CARD_TRACK_UL,
+            asset_path::UI_CARD_TRACK_UR,
+            asset_path::UI_CARD_TRACK_DL,
+            asset_path::UI_CARD_TRACK_DR,
+            asset_path::UI_CARD_SELECTION,
+        ]
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
 
         let mut textures = load_textures_parallel(texture_paths).await;
 
-        let texture_background_01 = textures.remove("assets/sprites/background.png").unwrap();
-        let texture_track_h = textures.remove("assets/sprites/track_h.png").unwrap();
-        let texture_track_v = textures.remove("assets/sprites/track_v.png").unwrap();
-        let texture_track_corner_ul = textures.remove("assets/sprites/track_corner_ul.png").unwrap();
-        let texture_track_corner_ur = textures.remove("assets/sprites/track_corner_ur.png").unwrap();
-        let texture_track_corner_dl = textures.remove("assets/sprites/track_corner_dl.png").unwrap();
-        let texture_track_corner_dr = textures.remove("assets/sprites/track_corner_dr.png").unwrap();
-        let texture_rock_1 = textures.remove("assets/sprites/rock_001.png").unwrap();
-        let texture_house_1 = textures.remove("assets/sprites/house_001.png").unwrap();
-        let texture_house_2 = textures.remove("assets/sprites/house_002.png").unwrap();
-        let texture_garbage_full = textures.remove("assets/sprites/garbage_full.png").unwrap();
-        let texture_garbage_empty = textures.remove("assets/sprites/garbage_empty.png").unwrap();
-        let texture_garbage_dropoff = textures.remove("assets/sprites/recyclying_center.png").unwrap();
-        let texture_garbage_indicator_0 = textures.remove("assets/sprites/garbage_indicator_0.png").unwrap();
-        let texture_garbage_indicator_1 = textures.remove("assets/sprites/garbage_indicator_1.png").unwrap();
-        let texture_garbage_indicator_2 = textures.remove("assets/sprites/garbage_indicator_2.png").unwrap();
-        let texture_garbage_indicator_3 = textures.remove("assets/sprites/garbage_indicator_3.png").unwrap();
-        let texture_mountain_border_u = textures.remove("assets/sprites/mountain_border_u.png").unwrap();
-        let texture_mountain_border_d = textures.remove("assets/sprites/mountain_border_d.png").unwrap();
-        let texture_mountain_border_l = textures.remove("assets/sprites/mountain_border_l.png").unwrap();
-        let texture_mountain_border_r = textures.remove("assets/sprites/mountain_border_r.png").unwrap();
-        let texture_mountain_border_corner_ul = textures.remove("assets/sprites/mountain_corner_ul.png").unwrap();
-        let texture_mountain_border_corner_ur = textures.remove("assets/sprites/mountain_corner_ur.png").unwrap();
-        let texture_mountain_border_corner_dl = textures.remove("assets/sprites/mountain_corner_dl.png").unwrap();
-        let texture_mountain_border_corner_dr = textures.remove("assets/sprites/mountain_corner_dr.png").unwrap();
-        let texture_mountain_tunnel_u = textures.remove("assets/sprites/mountain_tunnel_u.png").unwrap();
-        let texture_mountain_tunnel_d = textures.remove("assets/sprites/mountain_tunnel_d.png").unwrap();
-        let texture_mountain_tunnel_l = textures.remove("assets/sprites/mountain_tunnel_l.png").unwrap();
-        let texture_mountain_tunnel_r = textures.remove("assets/sprites/mountain_tunnel_r.png").unwrap();
-        let texture_mountain_tunnel_hole_open_u = textures.remove("assets/sprites/mountain_tunnel_hole_open_u.png").unwrap();
-        let texture_mountain_tunnel_hole_open_d = textures.remove("assets/sprites/mountain_tunnel_hole_open_d.png").unwrap();
-        let texture_mountain_tunnel_hole_open_l = textures.remove("assets/sprites/mountain_tunnel_hole_open_l.png").unwrap();
-        let texture_mountain_tunnel_hole_open_r = textures.remove("assets/sprites/mountain_tunnel_hole_open_r.png").unwrap();
-        let texture_mountain_tunnel_hole_closed_u = textures.remove("assets/sprites/mountain_tunnel_hole_closed_u.png").unwrap();
-        let texture_mountain_tunnel_hole_closed_d = textures.remove("assets/sprites/mountain_tunnel_hole_closed_d.png").unwrap();
-        let texture_mountain_tunnel_hole_closed_l = textures.remove("assets/sprites/mountain_tunnel_hole_closed_l.png").unwrap();
-        let texture_mountain_tunnel_hole_closed_r = textures.remove("assets/sprites/mountain_tunnel_hole_closed_r.png").unwrap();
-        let texture_train_l_001 = textures.remove("assets/sprites/train_front_l_001.png").unwrap();
-        let texture_train_l_002 = textures.remove("assets/sprites/train_front_l_002.png").unwrap();
-        let texture_train_r_001 = textures.remove("assets/sprites/train_front_r_001.png").unwrap();
-        let texture_train_r_002 = textures.remove("assets/sprites/train_front_r_002.png").unwrap();
-        let texture_train_u_001 = textures.remove("assets/sprites/train_front_u_001.png").unwrap();
-        let texture_train_u_002 = textures.remove("assets/sprites/train_front_u_002.png").unwrap();
-        let texture_train_d_001 = textures.remove("assets/sprites/train_front_d_001.png").unwrap();
-        let texture_train_d_002 = textures.remove("assets/sprites/train_front_d_002.png").unwrap();
-        let texture_ui_overlay = textures.remove("assets/sprites/ui_overlay.png").unwrap();
-        let texture_ui_card_track_h = textures.remove("assets/sprites/ui_card_track_h.png").unwrap();
-        let texture_ui_card_track_v = textures.remove("assets/sprites/ui_card_track_v.png").unwrap();
-        let texture_ui_card_track_ul = textures.remove("assets/sprites/ui_card_track_ul.png").unwrap();
-        let texture_ui_card_track_ur = textures.remove("assets/sprites/ui_card_track_ur.png").unwrap();
-        let texture_ui_card_track_dl = textures.remove("assets/sprites/ui_card_track_dl.png").unwrap();
-        let texture_ui_card_track_dr = textures.remove("assets/sprites/ui_card_track_dr.png").unwrap();
-        let texture_ui_card_selection = textures.remove("assets/sprites/ui_card_selection.png").unwrap();
+        let texture_background_01 = textures.remove(asset_path::BACKGROUND).unwrap();
+        let texture_track_h = textures.remove(asset_path::TRACK_H).unwrap();
+        let texture_track_v = textures.remove(asset_path::TRACK_V).unwrap();
+        let texture_track_corner_ul = textures.remove(asset_path::TRACK_CORNER_UL).unwrap();
+        let texture_track_corner_ur = textures.remove(asset_path::TRACK_CORNER_UR).unwrap();
+        let texture_track_corner_dl = textures.remove(asset_path::TRACK_CORNER_DL).unwrap();
+        let texture_track_corner_dr = textures.remove(asset_path::TRACK_CORNER_DR).unwrap();
+        let texture_rock_1 = textures.remove(asset_path::ROCK_001).unwrap();
+        let texture_house_1 = textures.remove(asset_path::HOUSE_001).unwrap();
+        let texture_house_2 = textures.remove(asset_path::HOUSE_002).unwrap();
+        let texture_garbage_full = textures.remove(asset_path::GARBAGE_FULL).unwrap();
+        let texture_garbage_empty = textures.remove(asset_path::GARBAGE_EMPTY).unwrap();
+        let texture_garbage_dropoff = textures.remove(asset_path::GARBAGE_DROPOFF).unwrap();
+        let texture_garbage_indicator_0 = textures.remove(asset_path::GARBAGE_INDICATOR_0).unwrap();
+        let texture_garbage_indicator_1 = textures.remove(asset_path::GARBAGE_INDICATOR_1).unwrap();
+        let texture_garbage_indicator_2 = textures.remove(asset_path::GARBAGE_INDICATOR_2).unwrap();
+        let texture_garbage_indicator_3 = textures.remove(asset_path::GARBAGE_INDICATOR_3).unwrap();
+        let texture_mountain_border_u = textures.remove(asset_path::MOUNTAIN_BORDER_U).unwrap();
+        let texture_mountain_border_d = textures.remove(asset_path::MOUNTAIN_BORDER_D).unwrap();
+        let texture_mountain_border_l = textures.remove(asset_path::MOUNTAIN_BORDER_L).unwrap();
+        let texture_mountain_border_r = textures.remove(asset_path::MOUNTAIN_BORDER_R).unwrap();
+        let texture_mountain_border_corner_ul =
+            textures.remove(asset_path::MOUNTAIN_CORNER_UL).unwrap();
+        let texture_mountain_border_corner_ur =
+            textures.remove(asset_path::MOUNTAIN_CORNER_UR).unwrap();
+        let texture_mountain_border_corner_dl =
+            textures.remove(asset_path::MOUNTAIN_CORNER_DL).unwrap();
+        let texture_mountain_border_corner_dr =
+            textures.remove(asset_path::MOUNTAIN_CORNER_DR).unwrap();
+        let texture_mountain_tunnel_u = textures.remove(asset_path::MOUNTAIN_TUNNEL_U).unwrap();
+        let texture_mountain_tunnel_d = textures.remove(asset_path::MOUNTAIN_TUNNEL_D).unwrap();
+        let texture_mountain_tunnel_l = textures.remove(asset_path::MOUNTAIN_TUNNEL_L).unwrap();
+        let texture_mountain_tunnel_r = textures.remove(asset_path::MOUNTAIN_TUNNEL_R).unwrap();
+        let texture_mountain_tunnel_hole_open_u = textures
+            .remove(asset_path::MOUNTAIN_TUNNEL_HOLE_OPEN_U)
+            .unwrap();
+        let texture_mountain_tunnel_hole_open_d = textures
+            .remove(asset_path::MOUNTAIN_TUNNEL_HOLE_OPEN_D)
+            .unwrap();
+        let texture_mountain_tunnel_hole_open_l = textures
+            .remove(asset_path::MOUNTAIN_TUNNEL_HOLE_OPEN_L)
+            .unwrap();
+        let texture_mountain_tunnel_hole_open_r = textures
+            .remove(asset_path::MOUNTAIN_TUNNEL_HOLE_OPEN_R)
+            .unwrap();
+        let texture_mountain_tunnel_hole_closed_u = textures
+            .remove(asset_path::MOUNTAIN_TUNNEL_HOLE_CLOSED_U)
+            .unwrap();
+        let texture_mountain_tunnel_hole_closed_d = textures
+            .remove(asset_path::MOUNTAIN_TUNNEL_HOLE_CLOSED_D)
+            .unwrap();
+        let texture_mountain_tunnel_hole_closed_l = textures
+            .remove(asset_path::MOUNTAIN_TUNNEL_HOLE_CLOSED_L)
+            .unwrap();
+        let texture_mountain_tunnel_hole_closed_r = textures
+            .remove(asset_path::MOUNTAIN_TUNNEL_HOLE_CLOSED_R)
+            .unwrap();
+        let texture_train_l_001 = textures.remove(asset_path::TRAIN_FRONT_L_001).unwrap();
+        let texture_train_l_002 = textures.remove(asset_path::TRAIN_FRONT_L_002).unwrap();
+        let texture_train_r_001 = textures.remove(asset_path::TRAIN_FRONT_R_001).unwrap();
+        let texture_train_r_002 = textures.remove(asset_path::TRAIN_FRONT_R_002).unwrap();
+        let texture_train_u_001 = textures.remove(asset_path::TRAIN_FRONT_U_001).unwrap();
+        let texture_train_u_002 = textures.remove(asset_path::TRAIN_FRONT_U_002).unwrap();
+        let texture_train_d_001 = textures.remove(asset_path::TRAIN_FRONT_D_001).unwrap();
+        let texture_train_d_002 = textures.remove(asset_path::TRAIN_FRONT_D_002).unwrap();
+        let texture_ui_overlay = textures.remove(asset_path::UI_OVERLAY).unwrap();
+        let texture_ui_card_track_h = textures.remove(asset_path::UI_CARD_TRACK_H).unwrap();
+        let texture_ui_card_track_v = textures.remove(asset_path::UI_CARD_TRACK_V).unwrap();
+        let texture_ui_card_track_ul = textures.remove(asset_path::UI_CARD_TRACK_UL).unwrap();
+        let texture_ui_card_track_ur = textures.remove(asset_path::UI_CARD_TRACK_UR).unwrap();
+        let texture_ui_card_track_dl = textures.remove(asset_path::UI_CARD_TRACK_DL).unwrap();
+        let texture_ui_card_track_dr = textures.remove(asset_path::UI_CARD_TRACK_DR).unwrap();
+        let texture_ui_card_selection = textures.remove(asset_path::UI_CARD_SELECTION).unwrap();
 
         // Load sound effects
-        let sfx_ui_selection = load_sound("assets/sfx/ui_selection.ogg").await.unwrap();
-        let sfx_ui_dialog_open = load_sound("assets/sfx/ui_dialog_open.ogg").await.unwrap();
-        let sfx_garbage_pickup = load_sound("assets/sfx/garbage_pickup.ogg").await.unwrap();
-        let sfx_garbage_dispose_partial = load_sound("assets/sfx/garbage_dispose_partial.ogg")
+        let sfx_ui_selection = load_sound(asset_path::SFX_UI_SELECTION).await.unwrap();
+        let sfx_ui_dialog_open = load_sound(asset_path::SFX_UI_DIALOG_OPEN).await.unwrap();
+        let sfx_garbage_pickup = load_sound(asset_path::SFX_GARBAGE_PICKUP).await.unwrap();
+        let sfx_garbage_dispose_partial = load_sound(asset_path::SFX_GARBAGE_DISPOSE_PARTIAL)
             .await
             .unwrap();
-        let sfx_garbage_dispose_full = load_sound("assets/sfx/garbage_dispose_full.ogg")
+        let sfx_garbage_dispose_full = load_sound(asset_path::SFX_GARBAGE_DISPOSE_FULL)
             .await
             .unwrap();
-        let sfx_track_place = load_sound("assets/sfx/track_place.ogg").await.unwrap();
-        let sfx_track_remove = load_sound("assets/sfx/track_remove.ogg").await.unwrap();
-        let sfx_explosion = load_sound("assets/sfx/explosion_01.ogg").await.unwrap();
+        let sfx_track_place = load_sound(asset_path::SFX_TRACK_PLACE).await.unwrap();
+        let sfx_track_remove = load_sound(asset_path::SFX_TRACK_REMOVE).await.unwrap();
+        let sfx_explosion = load_sound(asset_path::SFX_EXPLOSION).await.unwrap();
 
         // Load music tracks
-        let music_train_running_1 = load_sound("assets/music/train_running_loop_01.ogg")
-            .await
-            .unwrap();
-        let music_train_running_2 = load_sound("assets/music/train_running_loop_02.ogg")
-            .await
-            .unwrap();
+        let music_train_running_1 = load_sound(asset_path::MUSIC_TRAIN_RUNNING_1).await.unwrap();
+        let music_train_running_2 = load_sound(asset_path::MUSIC_TRAIN_RUNNING_2).await.unwrap();
 
         // Count total dropoffs across all levels
         let total_dropoffs_count = levels
