@@ -108,7 +108,7 @@
   <script>
     // Intercept WebAssembly.instantiate to know when WASM is loaded
     const originalInstantiate = WebAssembly.instantiate;
-    WebAssembly.instantiate = function(...args) {
+    WebAssembly.instantiate = function (...args) {
       return originalInstantiate.apply(this, args).then(result => {
         // WASM instantiated, hide loading screen
         document.getElementById('loading').classList.add('hidden');
@@ -117,7 +117,7 @@
     };
 
     // Start loading WASM
-    load("ld-58.wasm");
+    load("clean_line.wasm");
   </script>
 </body>
 

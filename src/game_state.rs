@@ -416,7 +416,9 @@ impl GameState {
         let sfx_ui_selection = sounds.remove(asset_path::SFX_UI_SELECTION).unwrap();
         let sfx_ui_dialog_open = sounds.remove(asset_path::SFX_UI_DIALOG_OPEN).unwrap();
         let sfx_garbage_pickup = sounds.remove(asset_path::SFX_GARBAGE_PICKUP).unwrap();
-        let sfx_garbage_dispose_partial = sounds.remove(asset_path::SFX_GARBAGE_DISPOSE_PARTIAL).unwrap();
+        let sfx_garbage_dispose_partial = sounds
+            .remove(asset_path::SFX_GARBAGE_DISPOSE_PARTIAL)
+            .unwrap();
         let sfx_garbage_dispose_full = sounds.remove(asset_path::SFX_GARBAGE_DISPOSE_FULL).unwrap();
         let sfx_track_place = sounds.remove(asset_path::SFX_TRACK_PLACE).unwrap();
         let sfx_track_remove = sounds.remove(asset_path::SFX_TRACK_REMOVE).unwrap();

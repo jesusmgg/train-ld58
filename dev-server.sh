@@ -6,5 +6,5 @@ live-server \
 --verbose \
 --no-browser \
 --ignore=deps,incremental,examples,build \
---watch=ld-58.wasm \
+--watch=clean_line.wasm \
 target/wasm32-unknown-unknown/debug
