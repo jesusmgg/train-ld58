@@ -652,16 +652,16 @@ fn render_ui_overlay(game_state: &GameState) {
         (
             card_x,
             174.0,
-            TileType::TrackCornerDL,
-            &game_state.texture_ui_card_track_dl,
-            game_state.count_track_dl,
+            TileType::TrackCornerDR,
+            &game_state.texture_ui_card_track_dr,
+            game_state.count_track_dr,
         ),
         (
             card_x,
             214.0,
-            TileType::TrackCornerDR,
-            &game_state.texture_ui_card_track_dr,
-            game_state.count_track_dr,
+            TileType::TrackCornerDL,
+            &game_state.texture_ui_card_track_dl,
+            game_state.count_track_dl,
         ),
     ];
 
@@ -1843,6 +1843,46 @@ fn try_select_track_card(game_state: &mut GameState, tile_type: TileType) -> boo
 }
 
 fn update_ui_card_selection(game_state: &mut GameState) {
+    // Track piece types in order
+    let track_types = [
+        TileType::TrackHorizontal,
+        TileType::TrackVertical,
+        TileType::TrackCornerUL,
+        TileType::TrackCornerUR,
+        TileType::TrackCornerDR,
+        TileType::TrackCornerDL,
+    ];
+
+    // Handle mouse wheel to cycle through track pieces
+    let (_x, y) = mouse_wheel();
+    if y != 0.0 {
+        let current_index = if let Some(current) = game_state.selected_tile {
+            track_types.iter().position(|&t| t == current)
+        } else {
+            None
+        };
+
+        let next_index = if let Some(idx) = current_index {
+            if y > 0.0 {
+                // Scroll up - go to previous piece
+                if idx == 0 {
+                    track_types.len() - 1
+                } else {
+                    idx - 1
+                }
+            } else {
+                // Scroll down - go to next piece
+                (idx + 1) % track_types.len()
+            }
+        } else {
+            // No selection, start at first piece
+            0
+        };
+
+        try_select_track_card(game_state, track_types[next_index]);
+        return;
+    }
+
     // Handle keyboard shortcuts for track piece selection (1-6)
     let keyboard_selected = if is_key_pressed(KeyCode::Key1) {
         Some(TileType::TrackHorizontal)
@@ -1853,9 +1893,9 @@ fn update_ui_card_selection(game_state: &mut GameState) {
     } else if is_key_pressed(KeyCode::Key4) {
         Some(TileType::TrackCornerUR)
     } else if is_key_pressed(KeyCode::Key5) {
-        Some(TileType::TrackCornerDL)
-    } else if is_key_pressed(KeyCode::Key6) {
         Some(TileType::TrackCornerDR)
+    } else if is_key_pressed(KeyCode::Key6) {
+        Some(TileType::TrackCornerDL)
     } else {
         None
     };
@@ -1890,8 +1930,8 @@ fn update_ui_card_selection(game_state: &mut GameState) {
         (card_x, 54.0, TileType::TrackVertical),
         (card_x, 94.0, TileType::TrackCornerUL),
         (card_x, 134.0, TileType::TrackCornerUR),
-        (card_x, 174.0, TileType::TrackCornerDL),
-        (card_x, 214.0, TileType::TrackCornerDR),
+        (card_x, 174.0, TileType::TrackCornerDR),
+        (card_x, 214.0, TileType::TrackCornerDL),
     ];
 
     let card_size = 36.0 * zoom as f32;
