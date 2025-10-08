@@ -1,6 +1,6 @@
 [package]
 name = "ld-58"
-version = "0.1.0"
+version = "1.0.9-ld58"
 edition = "2021"
 
 [dependencies]
