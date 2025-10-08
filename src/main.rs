@@ -818,7 +818,7 @@ fn render_message(game_state: &GameState) {
         let lines: Vec<&str> = message.split('\n').collect();
         let line_height = 16.0;
         let empty_line_height = 10.0; // Smaller height for empty lines (double \n)
-        let title_height = 28.0;
+        let title_height = 32.0;
 
         // Calculate box height accounting for title
         let mut total_height = 40.0;
@@ -868,7 +868,7 @@ fn render_message(game_state: &GameState) {
 
         // Draw message text lines
         let font_size = 16.0;
-        let title_font_size = 24.0;
+        let title_font_size = 28.0;
         let text_x = box_x + 10.0;
         let mut text_y = box_y + 25.0;
 
@@ -883,12 +883,20 @@ fn render_message(game_state: &GameState) {
                 font_size
             };
 
+            // Use different color for credit lines
+            let text_color =
+                if line.starts_with("Originally made by") || line.starts_with("the Ludum Dare") {
+                    &game_state.styles.colors.brown_2
+                } else {
+                    &game_state.styles.colors.brown_3
+                };
+
             draw_scaled_text(
                 line,
                 screen_text_x,
                 screen_text_y,
                 current_font_size * zoom as f32,
-                &game_state.styles.colors.brown_3,
+                text_color,
                 &game_state.font,
             );
 
@@ -916,7 +924,7 @@ fn render_message(game_state: &GameState) {
                 screen_version_x,
                 screen_version_y,
                 version_font_size * zoom as f32,
-                &game_state.styles.colors.brown_3,
+                &game_state.styles.colors.brown_2,
                 &game_state.font,
             );
         }
@@ -1797,7 +1805,7 @@ fn update_level_12_shortcut(game_state: &mut GameState) {
 }
 
 fn update_help_message(game_state: &mut GameState) {
-    let help_msg = Some("CLEAN LINE\nBuild railroads, collect garbage, and take it to\nthe recycling centers.\n\nLeft click to place a track, right click to remove it.\n\nStart/stop the train with <Space>.\n\nReset the current level with <R>.".to_string());
+    let help_msg = Some("CLEAN LINE\nBuild railroads, collect garbage, and take it to\nthe recycling centers.\n\nLeft click to place a track, right click to remove it.\n\nStart/stop the train with <Space>.\n\nReset the current level with <R>.\n\nOriginally made by Jesus Gonzalez in 48 hours for\nthe Ludum Dare 58 Compo.".to_string());
 
     // Show help message at the start of the game
     if !game_state.help_message_shown {

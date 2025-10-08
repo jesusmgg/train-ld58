@@ -19,9 +19,9 @@
 - Help button.
 - Reset button.
 - Start/stop button.
+- Clean up help message rendering code.
 
 ## Bugs
-- Loading screen is not showing.
 - Tile highlight should only be active when the level is fully in camera view.
 - Game scale gets small with certain window sizes. May be OK.
 
