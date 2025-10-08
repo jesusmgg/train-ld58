@@ -47,6 +47,7 @@ async fn main() {
         update_tile_highlight(&mut game_state);
         update_tile_highlight_position(&mut game_state);
         update_ui_card_selection(&mut game_state);
+        update_card_selector_position(&mut game_state);
         update_tile_placement(&mut game_state);
         update_tile_removal(&mut game_state);
         update_train_movement(&mut game_state);
@@ -574,6 +575,34 @@ fn update_tile_highlight_position(game_state: &mut GameState) {
     }
 }
 
+fn update_card_selector_position(game_state: &mut GameState) {
+    if let Some(selected) = game_state.selected_tile {
+        // Get target position based on selected tile type
+        let card_x = 14.0;
+        let card_y = match selected {
+            TileType::TrackHorizontal => 14.0,
+            TileType::TrackVertical => 54.0,
+            TileType::TrackCornerUL => 94.0,
+            TileType::TrackCornerUR => 134.0,
+            TileType::TrackCornerDR => 174.0,
+            TileType::TrackCornerDL => 214.0,
+            _ => 14.0, // Default fallback
+        };
+        let target = f32::vec2(card_x, card_y);
+
+        // If previously not selected, snap to position immediately
+        if game_state.selected_tile_prev.is_none() {
+            game_state.card_selector_pos = target;
+        } else {
+            // Smooth interpolation
+            let delta = get_frame_time();
+            let t = 1.0 - (1.0 - CARD_SELECTOR_LERP_SPEED * delta).max(0.0);
+            game_state.card_selector_pos =
+                game_state.card_selector_pos + (target - game_state.card_selector_pos) * t;
+        }
+    }
+}
+
 fn render_tile_highlight(game_state: &GameState) {
     if game_state.tile_highlighted.is_some() {
         if let Some(level) = game_state.current_level() {
@@ -665,7 +694,7 @@ fn render_ui_overlay(game_state: &GameState) {
         ),
     ];
 
-    for (card_x, card_y, tile_type, texture, count) in &card_positions {
+    for (card_x, card_y, _tile_type, texture, count) in &card_positions {
         let screen_x = x_offset + (card_x * zoom as f32);
         let screen_y = y_offset + (card_y * zoom as f32);
 
@@ -680,22 +709,6 @@ fn render_ui_overlay(game_state: &GameState) {
             },
         );
 
-        // Draw selection indicator on selected card
-        if let Some(selected) = game_state.selected_tile {
-            if selected == *tile_type {
-                draw_texture_ex(
-                    &game_state.texture_ui_card_selection,
-                    screen_x - 6.0,
-                    screen_y - 6.0,
-                    WHITE,
-                    DrawTextureParams {
-                        dest_size: Some(Vec2::new(40.0 * zoom as f32, 40.0 * zoom as f32)),
-                        ..Default::default()
-                    },
-                );
-            }
-        }
-
         // Draw count overlay on bottom-left corner of the card
         let count_x = screen_x + (2.0 * zoom as f32);
         let count_y = screen_y + (32.0 * zoom as f32);
@@ -706,6 +719,22 @@ fn render_ui_overlay(game_state: &GameState) {
             16.0 * zoom as f32,
             &WHITE,
             &game_state.font,
+        );
+    }
+
+    // Draw selection indicator at lerped position
+    if game_state.selected_tile.is_some() {
+        let selector_screen_x = x_offset + (game_state.card_selector_pos.x * zoom as f32) - 6.0;
+        let selector_screen_y = y_offset + (game_state.card_selector_pos.y * zoom as f32) - 6.0;
+        draw_texture_ex(
+            &game_state.texture_ui_card_selection,
+            selector_screen_x,
+            selector_screen_y,
+            WHITE,
+            DrawTextureParams {
+                dest_size: Some(Vec2::new(40.0 * zoom as f32, 40.0 * zoom as f32)),
+                ..Default::default()
+            },
         );
     }
 }
@@ -1834,6 +1863,7 @@ fn try_select_track_card(game_state: &mut GameState, tile_type: TileType) -> boo
     );
 
     // Toggle selection: deselect if already selected, otherwise select
+    game_state.selected_tile_prev = game_state.selected_tile;
     if game_state.selected_tile == Some(tile_type) {
         game_state.selected_tile = None;
     } else {

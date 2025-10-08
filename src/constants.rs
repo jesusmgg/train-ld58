@@ -12,3 +12,4 @@ pub const TRAIN_SPEED: f32 = 2.0; // Tiles per second
 pub const TRAIN_ANIM_SPEED: f32 = 0.15; // Seconds per frame
 
 pub const TILE_HIGHLIGHT_LERP_SPEED: f32 = 50.0; // Higher = faster interpolation
+pub const CARD_SELECTOR_LERP_SPEED: f32 = 30.0; // Higher = faster interpolation

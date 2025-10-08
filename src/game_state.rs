@@ -88,6 +88,8 @@ pub struct GameState {
     pub level_active: Option<usize>,
 
     pub selected_tile: Option<TileType>,
+    pub selected_tile_prev: Option<TileType>,
+    pub card_selector_pos: f32::Vec2, // Smoothly interpolated card selector position
 
     pub train_tile_pos: IVec2, // Logical grid position within current level
     pub train_pos_offset: f32::Vec2, // Smooth position offset from tile position (0.0 to 1.0)
@@ -222,6 +224,8 @@ impl GameState {
         let level_active = Some(0);
 
         let selected_tile = None;
+        let selected_tile_prev = None;
+        let card_selector_pos = f32::vec2(0.0, 0.0);
 
         // Mark starting level as visited
         let mut visited_levels = vec![false; 9];
@@ -457,6 +461,8 @@ impl GameState {
             levels,
 
             selected_tile,
+            selected_tile_prev,
+            card_selector_pos,
 
             count_track_h,
             count_track_v,
