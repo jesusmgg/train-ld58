@@ -16,8 +16,6 @@
 - Update help text.
 - Initial logo.
 - Game saving.
-- Hotkeys for track selection.
-- Mouse wheel for track selection.
 - Delete track (bulldozer) button.
 - Help button.
 - Reset button.
