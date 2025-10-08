@@ -540,7 +540,7 @@ impl GameState {
             level_22_tunnels_opened: false,
             win_message_shown: false,
             help_message_shown: false,
-            debug_ui_visible: true,
+            debug_ui_visible: false,
 
             texture_ui_overlay,
             texture_ui_card_track_h,

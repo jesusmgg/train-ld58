@@ -78,6 +78,8 @@ async fn main() {
         render_garbage_counters(&game_state);
         render_message(&game_state);
         #[cfg(debug_assertions)]
+        render_debug_build_indicator(&game_state);
+        #[cfg(debug_assertions)]
         if game_state.debug_ui_visible {
             render_tile_indices(&game_state);
             render_diagnostics(&game_state);
@@ -813,7 +815,8 @@ fn render_message(game_state: &GameState) {
 
         // Split message into lines
         let lines: Vec<&str> = message.split('\n').collect();
-        let line_height = 20.0;
+        let line_height = 16.0;
+        let empty_line_height = 10.0; // Smaller height for empty lines (double \n)
         let title_height = 28.0;
 
         // Calculate box height accounting for title
@@ -821,6 +824,8 @@ fn render_message(game_state: &GameState) {
         for line in &lines {
             if *line == "CLEAN LINE" {
                 total_height += title_height;
+            } else if line.is_empty() {
+                total_height += empty_line_height;
             } else {
                 total_height += line_height;
             }
@@ -886,14 +891,67 @@ fn render_message(game_state: &GameState) {
                 &game_state.font,
             );
 
-            // Use different line height for title
+            // Use different line height for title and empty lines
             if line == "CLEAN LINE" {
                 text_y += title_height;
+            } else if line.is_empty() {
+                text_y += empty_line_height;
             } else {
                 text_y += line_height;
             }
         }
+
+        // Add version number in bottom-right corner if this is the help message
+        if message.contains("CLEAN LINE") {
+            let version = env!("CARGO_PKG_VERSION");
+            let version_font_size = 12.0;
+            let version_x = box_x + box_width - 24.0;
+            let version_y = box_y + box_height - 8.0;
+            let screen_version_x = x_offset + (version_x * zoom as f32);
+            let screen_version_y = y_offset + (version_y * zoom as f32);
+
+            draw_scaled_text(
+                &format!("v{}", version),
+                screen_version_x,
+                screen_version_y,
+                version_font_size * zoom as f32,
+                &game_state.styles.colors.brown_3,
+                &game_state.font,
+            );
+        }
     }
+}
+
+fn render_debug_build_indicator(game_state: &GameState) {
+    // Calculate integer zoom factor for pixel perfect rendering (same as camera)
+    let zoom = ((screen_width() as i32 / SCREEN_W as i32)
+        .min(screen_height() as i32 / SCREEN_H as i32)) as i32;
+
+    let zoomed_w = (SCREEN_W as i32) * zoom;
+    let zoomed_h = (SCREEN_H as i32) * zoom;
+
+    // Center on screen
+    let x_offset = ((screen_width() as i32 - zoomed_w) / 2) as f32;
+    let y_offset = ((screen_height() as i32 - zoomed_h) / 2) as f32;
+
+    // Position in bottom-left corner
+    let version = env!("CARGO_PKG_VERSION");
+    let text = &format!("DEBUG BUILD - v{}", version);
+    let font_size = 12.0;
+    let text_x = 70.0;
+    let text_y = SCREEN_H - 6.0;
+
+    let screen_text_x = x_offset + (text_x * zoom as f32);
+    let screen_text_y = y_offset + (text_y * zoom as f32);
+
+    draw_scaled_text(
+        text,
+        screen_text_x,
+        screen_text_y,
+        font_size * zoom as f32,
+        &game_state.styles.colors.yellow_1,
+        &game_state.font,
+    );
 }
 
 fn render_tile_indices(game_state: &GameState) {
@@ -1689,7 +1747,7 @@ fn update_level_22_tunnels(game_state: &mut GameState) {
 }
 
 fn update_help_message(game_state: &mut GameState) {
-    let help_msg = Some("CLEAN LINE\nBuild railroads, collect garbage, and take it to\nthe recycling centers.\n\nStart/stop the train with <Space>.\n\nReset the current level with <R>.".to_string());
+    let help_msg = Some("CLEAN LINE\nBuild railroads, collect garbage, and take it to\nthe recycling centers.\n\nLeft click to place a track, right click to remove it.\n\nStart/stop the train with <Space>.\n\nReset the current level with <R>.".to_string());
 
     // Show help message at the start of the game
     if !game_state.help_message_shown {
