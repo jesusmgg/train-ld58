@@ -11,7 +11,6 @@
 - Music: train stopped
 
 ## Pending
-- Center and align all text.
 - Add arrow to point to stopped train.
 - Initial logo.
 - Game saving.
