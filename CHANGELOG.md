@@ -1,3 +1,7 @@
+# v1.1.1
+- Repositioned some garbage pickups in level 1-2 to prevent a softlock.
+- Fixed resource resets when shortcut is opened.
+
 # v1.1.0
 - Added hotkeys (1-6) and mouse wheel support for track piece selection.
 - Improved initial asset loading times (implemented parallelized loading).

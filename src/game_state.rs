@@ -721,6 +721,19 @@ impl GameState {
         }
     }
 
+    pub fn reset_track_pieces_to_default(&mut self) {
+        if self.level_22_tunnels_opened || self.level_12_shortcut_opened {
+            return;
+        }
+
+        self.count_track_h = 10;
+        self.count_track_v = 10;
+        self.count_track_ul = 5;
+        self.count_track_ur = 5;
+        self.count_track_dl = 5;
+        self.count_track_dr = 5;
+    }
+
     pub fn reset_level(&mut self) {
         // Reset all garbage tiles in the current level
         // Only adjust garbage_held for pickups/dropoffs in this level
@@ -968,10 +981,10 @@ impl GameState {
         // Add garbage pickups - full row 0 except 0,0
         level12
             .tile_layout
-            .insert(IVec2::new(9, 6), TileType::GarbagePickupFull);
+            .insert(IVec2::new(4, 6), TileType::GarbagePickupFull);
         level12
             .tile_layout
-            .insert(IVec2::new(9, 5), TileType::GarbagePickupFull);
+            .insert(IVec2::new(5, 6), TileType::GarbagePickupFull);
         level12
             .tile_layout
             .insert(IVec2::new(0, 6), TileType::GarbagePickupFull);

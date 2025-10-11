@@ -349,12 +349,7 @@ fn update_debug_controls(game_state: &mut GameState) {
     if let Some(level_idx) = jump_to_level {
         if level_idx < game_state.levels.len() {
             // Reset pieces to default
-            game_state.count_track_h = 10;
-            game_state.count_track_v = 10;
-            game_state.count_track_ul = 5;
-            game_state.count_track_ur = 5;
-            game_state.count_track_dl = 5;
-            game_state.count_track_dr = 5;
+            game_state.reset_track_pieces_to_default();
 
             // Jump to level
             game_state.level_active = Some(level_idx);
@@ -430,12 +425,7 @@ fn update_debug_controls(game_state: &mut GameState) {
             game_state.visited_levels[new_idx] = true;
 
             // Reset track pieces to standard on first visit
-            game_state.count_track_h = 10;
-            game_state.count_track_v = 10;
-            game_state.count_track_ul = 5;
-            game_state.count_track_ur = 5;
-            game_state.count_track_dl = 5;
-            game_state.count_track_dr = 5;
+            game_state.reset_track_pieces_to_default();
         }
         // Don't alter pieces on revisit
 
@@ -799,8 +789,7 @@ fn render_garbage_counters(game_state: &GameState) {
 
     // Garbage held count - measure and center in right panel
     let garbage_text = format!("{}", game_state.garbage_held);
-    let garbage_dims =
-        measure_text(&garbage_text, Some(&game_state.font), font_size as u16, 1.0);
+    let garbage_dims = measure_text(&garbage_text, Some(&game_state.font), font_size as u16, 1.0);
     let garbage_x = (SCREEN_W - right_panel_width) + (right_panel_width - garbage_dims.width) / 2.0;
     let garbage_y = 170.0;
     let garbage_screen_x = x_offset + (garbage_x * zoom as f32);
@@ -1291,12 +1280,7 @@ fn update_train_movement(game_state: &mut GameState) {
                                 game_state.visited_levels[next_idx] = true;
 
                                 // Reset track pieces to standard on first visit
-                                game_state.count_track_h = 10;
-                                game_state.count_track_v = 10;
-                                game_state.count_track_ul = 5;
-                                game_state.count_track_ur = 5;
-                                game_state.count_track_dl = 5;
-                                game_state.count_track_dr = 5;
+                                game_state.reset_track_pieces_to_default();
                             }
 
                             let next_level = &game_state.levels[next_idx];
@@ -1750,8 +1734,7 @@ fn update_level_22_tunnels(game_state: &mut GameState) {
                     );
 
                     // Count visited levels
-                    let visited_count =
-                        game_state.visited_levels.iter().filter(|&&v| v).count() as i32;
+                    let level_count = game_state.levels.len() as i32;
 
                     // Count used track pieces across all levels
                     let mut used_h = 0;
@@ -1775,13 +1758,13 @@ fn update_level_22_tunnels(game_state: &mut GameState) {
                         }
                     }
 
-                    // Add parts: straight = 10 * visited - used, corners = 5 * visited - used
-                    game_state.count_track_h += (10 * visited_count - used_h).max(0);
-                    game_state.count_track_v += (10 * visited_count - used_v).max(0);
-                    game_state.count_track_ul += (5 * visited_count - used_ul).max(0);
-                    game_state.count_track_ur += (5 * visited_count - used_ur).max(0);
-                    game_state.count_track_dl += (5 * visited_count - used_dl).max(0);
-                    game_state.count_track_dr += (5 * visited_count - used_dr).max(0);
+                    // Add parts: straight = 10 * level_count - used, corners = 5 * visited - used
+                    game_state.count_track_h += (10 * level_count - used_h).max(0);
+                    game_state.count_track_v += (10 * level_count - used_v).max(0);
+                    game_state.count_track_ul += (5 * level_count - used_ul).max(0);
+                    game_state.count_track_ur += (5 * level_count - used_ur).max(0);
+                    game_state.count_track_dl += (5 * level_count - used_dl).max(0);
+                    game_state.count_track_dr += (5 * level_count - used_dr).max(0);
 
                     // Show message to player
                     game_state.message = Some("All tunnels are now open!".to_string());
