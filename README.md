@@ -38,3 +38,26 @@ chmod +x dev-server.sh
 ```
 
 This will start the development web server, watch for builds and reload the browser window if there is a new one.
+
+## Creating a release
+To build and package a release:
+
+```bash
+chmod +x release.sh
+./release.sh <target>
+```
+
+Available targets:
+- `wasm` - WebAssembly build for browsers
+- `windows` - Windows executable (x86_64-pc-windows-gnu)
+- `linux-musl` - Linux with musl libc (x86_64-unknown-linux-musl)
+- `linux-gnu` - Linux with glibc (x86_64-unknown-linux-gnu)
+
+Example:
+```bash
+./release.sh wasm
+./release.sh windows
+./release.sh linux-gnu
+```
+
+This will build a release version and create a zip package in `build/<target>/` with the version from `Cargo.toml`.
