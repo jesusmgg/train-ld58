@@ -47,7 +47,7 @@ echo "Version: $VERSION"
 
 # Paths
 BUILD_DIR="build/$TARGET"
-ZIP_NAME="clean-line-${VERSION}.zip"
+ZIP_NAME="clean-line-${VERSION}-${TARGET}.zip"
 
 # Create build directory if it doesn't exist
 mkdir -p "$BUILD_DIR"
