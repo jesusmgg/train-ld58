@@ -61,7 +61,7 @@ pub fn render_loading_screen(
         screen_box_y,
         box_width * zoom as f32,
         box_height * zoom as f32,
-        styles.colors.yellow_1,
+        styles.colors.orange_2,
     );
 
     // Text
@@ -95,7 +95,7 @@ pub fn render_loading_screen(
         screen_bar_y,
         bar_width * zoom as f32,
         bar_height * zoom as f32,
-        styles.colors.brown_3,
+        styles.colors.brown_1,
     );
 
     // Progress bar fill
@@ -105,7 +105,7 @@ pub fn render_loading_screen(
         screen_bar_y,
         fill_width * zoom as f32,
         bar_height * zoom as f32,
-        styles.colors.green_1,
+        styles.colors.brown_3,
     );
 }
 
