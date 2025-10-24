@@ -18,9 +18,21 @@ async fn main() {
 
     // Load minimal assets for loading screen
     let styles = Styles::new();
-    let font = load_ttf_font(asset_path::FONT_KENNEY_PIXEL).await.unwrap();
 
-    // Start loading coroutine (clone font to move into coroutine)
+    // Start loading font in a coroutine
+    let font_loader = start_coroutine(async move {
+        load_ttf_font(asset_path::FONT_KENNEY_PIXEL).await.unwrap()
+    });
+
+    // Render green background while font loads
+    while !font_loader.is_done() {
+        clear_background(styles.colors.green_4);
+        next_frame().await;
+    }
+
+    let font = font_loader.retrieve().unwrap();
+
+    // Start loading game state (clone font to move into coroutine)
     let font_clone = font.clone();
     let loading = start_coroutine(async move { GameState::new(font_clone).await });
 
