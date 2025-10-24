@@ -1,3 +1,6 @@
+# v1.1.2
+- Backported improved preloader and asset loaders from the parasite game.
+
 # v1.1.1
 - Repositioned some garbage pickups in level 1-2 to prevent a softlock.
 - Fixed resource resets when shortcut is opened.
