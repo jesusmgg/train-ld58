@@ -8,7 +8,7 @@ use macroquad::{
     window::{screen_height, screen_width},
 };
 
-use crate::asset_loader::{load_audio_parallel, load_textures_parallel};
+use crate::asset_loader::{load_audio_parallel, load_textures_parallel, LoadingProgress};
 use crate::asset_path;
 use crate::constants::*;
 use crate::styles::Styles;
@@ -325,7 +325,12 @@ impl GameState {
         .map(|s| s.to_string())
         .collect();
 
-        let mut textures = load_textures_parallel(texture_paths).await;
+        let mut loading_progress = LoadingProgress {
+            progress: 0.0,
+            text: "Initializing...".to_string(),
+        };
+
+        let mut textures = load_textures_parallel(texture_paths, &mut loading_progress, &styles, &font).await;
 
         let texture_background_01 = textures.remove(asset_path::BACKGROUND).unwrap();
         let texture_track_h = textures.remove(asset_path::TRACK_H).unwrap();
@@ -418,7 +423,7 @@ impl GameState {
         .map(|s| s.to_string())
         .collect();
 
-        let mut sounds = load_audio_parallel(sound_paths).await;
+        let mut sounds = load_audio_parallel(sound_paths, &mut loading_progress, &styles, &font).await;
 
         let sfx_ui_selection = sounds.remove(asset_path::SFX_UI_SELECTION).unwrap();
         let sfx_ui_dialog_open = sounds.remove(asset_path::SFX_UI_DIALOG_OPEN).unwrap();

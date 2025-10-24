@@ -54,7 +54,7 @@
       width: 40px;
       height: 40px;
       animation: spin 1s linear infinite;
-      margin-bottom: 20px;
+      margin-top: 30px;
     }
 
     @keyframes spin {
@@ -71,10 +71,8 @@
 
 <body>
   <div id="loading">
+    <div>Preloading engine bundle...</div>
     <div class="spinner"></div>
-    <div>Loading...</div>
-    <div style="font-size: 14px; margin-top: 10px; opacity: 0.7;">This can take a while, but it is loading!<br>A black
-      screen is fine too, just wait.</div>
   </div>
   <canvas id="glcanvas" tabindex="1"></canvas>
   <script src="mq_js_bundle.js"></script>
